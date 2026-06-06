@@ -3,6 +3,7 @@ import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtu
 import { teamMembers } from './data/team';
 
 const vortexLogo = '/src/assets/images/vortex_logo.png';
+const vortexLongLogo = '/src/assets/images/Vortex_long.png';
 
 // Reusable Image component that handles missing imagery by rendering an elegant, styled SVG canvas fallback with technical indicators in the active theme
 const ImageWithFallback = ({ src, alt, className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
@@ -305,12 +306,12 @@ const GalleryPageView = () => {
 
 // Team member portraits using local actual-path PNG configurations
 const portraits: Record<string, string> = {
-  '1': '/src/assets/images/portraits/alex_rivera.png', // Alex Rivera
-  '2': '/src/assets/images/portraits/sarah_chen.png',   // Sarah Chen
-  '3': '/src/assets/images/portraits/marcus_vance.png', // Marcus Vance
-  '4': '/src/assets/images/portraits/emily_taylor.png', // Emily Taylor
-  '5': '/src/assets/images/portraits/david_kim.png',    // David Kim
-  '6': '/src/assets/images/portraits/coach_elena_rostova.png' // Coach Elena Rostova
+  '1': '/src/assets/images/portraits/person_1.png', // Alex Rivera
+  '2': '/src/assets/images/portraits/person_2.png', // Sarah Chen
+  '3': '/src/assets/images/portraits/person_3.png', // Marcus Vance
+  '4': '/src/assets/images/portraits/person_4.png', // Emily Taylor
+  '5': '/src/assets/images/portraits/person_5.png', // David Kim
+  '6': '/src/assets/images/portraits/person_6.png'  // Coach Elena Rostova (person_6)
 };
 
 const sponsorLogos = [
@@ -797,7 +798,7 @@ export default function App() {
               {/* Image side */}
               <div className="md:col-span-5 relative aspect-[16/11] rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-primary)] group">
                 <ImageWithFallback 
-                  src="/src/assets/images/vortex_robot_hero_1780695937145.png" 
+                  src="/src/assets/images/robot_img.png" 
                   alt="Vortex Competition Robot Hero design representation" 
                   className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
                 />
@@ -920,7 +921,7 @@ export default function App() {
                     role: 'Lead Technical Mentor',
                     department: 'Coaching',
                     bio: 'With over 10 years of aerospace engineering experience, Elena teaches Vortex structural math, electrical safety, and industrial CAD standards.',
-                    photo: '/src/assets/images/portraits/coach_elena_rostova.png',
+                    photo: '/src/assets/images/portraits/person_6.png',
                     yearsExperience: 8
                   },
                   {
@@ -929,7 +930,7 @@ export default function App() {
                     role: 'Control Theory Consultant',
                     department: 'Advisory',
                     bio: 'Arthur is an associate professor of engineering who guides our developers on advanced sensor fusion matrices and smooth acceleration pathing curves.',
-                    photo: '/src/assets/images/portraits/advisor_arthur.png',
+                    photo: '/src/assets/images/portraits/person_7.png',
                     yearsExperience: 5
                   },
                   {
@@ -938,7 +939,7 @@ export default function App() {
                     role: 'Sponsorship & Outreach Advisor',
                     department: 'Business Advisory',
                     bio: 'Sarah coaches the design team on budgeting, industry partner presentations, public speaking, and building a sustainable high school robotics brand.',
-                    photo: '/src/assets/images/portraits/advisor_sarah.png',
+                    photo: '/src/assets/images/portraits/person_8.png',
                     yearsExperience: 4
                   },
                   {
@@ -947,7 +948,7 @@ export default function App() {
                     role: 'Manufacturing & Machining Mentor',
                     department: 'Fabrication',
                     bio: 'A veteran machinist and shop owner who teaches safe operation of CNC routers, manual lathe operations, and close-tolerance chassis fabrication.',
-                    photo: '/src/assets/images/portraits/advisor_marcus.png',
+                    photo: '/src/assets/images/portraits/person_9.png',
                     yearsExperience: 6
                   },
                   {
@@ -956,7 +957,7 @@ export default function App() {
                     role: 'Software & Logic Advisor',
                     department: 'Programming',
                     bio: 'A research systems software architect who guides the programming sub-division in thread-safe multi-threading, custom telemetry loops, and vision processing filters.',
-                    photo: '/src/assets/images/portraits/advisor_lisa.png',
+                    photo: '/src/assets/images/portraits/person_10.png',
                     yearsExperience: 7
                   }
                 ].map((mentor) => (
