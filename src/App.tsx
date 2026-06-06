@@ -2,7 +2,42 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image } from 'lucide-react';
 import { teamMembers } from './data/team';
 
-const vortexLogo = './assets/images/vortex_logo.png';
+const vortexLogo = '/src/assets/images/vortex_logo.png';
+
+// Reusable Image component that handles missing imagery by rendering an elegant, styled SVG canvas fallback with technical indicators in the active theme
+const ImageWithFallback = ({ src, alt, className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  if (error || !src) {
+    return (
+      <div className={`flex flex-col items-center justify-center bg-gradient-to-br from-[var(--accent)]/10 to-[var(--accent)]/5 border border-[var(--border)] text-[var(--accent)] select-none p-4 text-center w-full h-full min-h-[160px] ${className}`}>
+        <Wrench className="w-8 h-8 opacity-40 animate-pulse mb-1.5" />
+        <span className="text-[10px] font-mono tracking-widest text-[var(--text-primary)] uppercase font-semibold">Image Pending</span>
+        <span className="text-[8px] font-mono text-[var(--text-secondary)] uppercase mt-0.5">Placeholder .png</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-full">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-primary)] animate-pulse z-10">
+          <Cpu className="w-5 h-5 text-[var(--accent)] animate-spin" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={className}
+        onError={() => setError(true)}
+        onLoad={() => setLoading(false)}
+        referrerPolicy="no-referrer"
+        {...props}
+      />
+    </div>
+  );
+};
 
 type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery';
 
@@ -83,13 +118,13 @@ const FIRSTExperienceSpinner = ({ targetYears }: { targetYears: number }) => {
   );
 };
 
-// High-fidelity media assets list
+// High-fidelity media assets list mapped to local PNG configurations
 const galleryItems = [
   {
     id: 1,
     title: 'Precision Chassis Milling',
     caption: 'Custom machining of our lightweight aerospace-grade aluminum chassis base-plate on our shop router.',
-    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800',
+    image: '/src/assets/images/gallery/milling.png',
     category: 'MECHANICAL',
     date: 'July 2026'
   },
@@ -97,7 +132,7 @@ const galleryItems = [
     id: 2,
     title: 'Custom PCB Circuit Design',
     caption: 'Prototyping dynamic sensor routing hubs inside Altium to sync absolute encoders and pinpoint system modules.',
-    image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=800',
+    image: '/src/assets/images/gallery/pcb.png',
     category: 'ELECTRONICS',
     date: 'June 2026'
   },
@@ -105,7 +140,7 @@ const galleryItems = [
     id: 3,
     title: '3D CAD Mecanum Assembly',
     caption: 'Optimizing high-reduction gearbox placements and motor clearance inside OnShape.',
-    image: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=800',
+    image: '/src/assets/images/gallery/mecanum_cad.png',
     category: 'CAD MODELS',
     date: 'June 2026'
   },
@@ -113,7 +148,7 @@ const galleryItems = [
     id: 4,
     title: 'Electrical Harness Inspection',
     caption: 'Testing clean wire loom protections, power distribution modules, and custom copper bus connections.',
-    image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=800',
+    image: '/src/assets/images/gallery/wiring.png',
     category: 'ELECTRONICS',
     date: 'August 2026'
   },
@@ -121,7 +156,7 @@ const galleryItems = [
     id: 5,
     title: 'Initial Team Brainstorm Block',
     caption: 'Texas rookie builders studying math bounds, game elements, design spreadsheets, and robot rules.',
-    image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800',
+    image: '/src/assets/images/gallery/team_brainstorm.png',
     category: 'WORKSHOPS',
     date: 'June 2026'
   },
@@ -129,7 +164,7 @@ const galleryItems = [
     id: 6,
     title: 'Trajectory Polynomial Plotting',
     caption: 'Drafting bezier mathematical spline curves to calculate path control velocity parameters.',
-    image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=800',
+    image: '/src/assets/images/gallery/trajectory.png',
     category: 'CAD MODELS',
     date: 'August 2026'
   }
@@ -190,11 +225,10 @@ const GalleryPageView = () => {
                   🔎 ZOOM PICTURE
                 </span>
               </div>
-              <img 
+              <ImageWithFallback 
                 src={item.image} 
                 alt={item.title} 
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                referrerPolicy="no-referrer"
               />
             </div>
 
@@ -238,11 +272,10 @@ const GalleryPageView = () => {
             </button>
 
             <div className="relative aspect-[16/10] bg-black">
-              <img 
+              <ImageWithFallback 
                 src={zoomedImage.image} 
                 alt={zoomedImage.title} 
                 className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
               />
             </div>
 
@@ -270,44 +303,44 @@ const GalleryPageView = () => {
   );
 };
 
-// Team member portraits using premium high-contrast photography placeholders
+// Team member portraits using local actual-path PNG configurations
 const portraits: Record<string, string> = {
-  '1': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600&h=450', // Alex Rivera
-  '2': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600&h=450', // Sarah Chen
-  '3': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600&h=450', // Marcus Vance
-  '4': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600&h=450', // Emily Taylor
-  '5': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600&h=450', // David Kim
-  '6': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=600&h=450'  // Coach Elena Rostova
+  '1': '/src/assets/images/portraits/alex_rivera.png', // Alex Rivera
+  '2': '/src/assets/images/portraits/sarah_chen.png',   // Sarah Chen
+  '3': '/src/assets/images/portraits/marcus_vance.png', // Marcus Vance
+  '4': '/src/assets/images/portraits/emily_taylor.png', // Emily Taylor
+  '5': '/src/assets/images/portraits/david_kim.png',    // David Kim
+  '6': '/src/assets/images/portraits/coach_elena_rostova.png' // Coach Elena Rostova
 };
 
 const sponsorLogos = [
   { 
     name: 'NASA Jet Propulsion Lab', 
-    logo: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600&h=300', 
+    logo: '/src/assets/images/sponsors/nasa_jpl.png', 
     tier: 'Titanium Sponsor',
     desc: 'Advancing aerospace system research and technical grant support.'
   },
   { 
     name: 'goBILDA', 
-    logo: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=600&h=300', 
+    logo: '/src/assets/images/sponsors/gobilda.png', 
     tier: 'Gold Partner',
     desc: 'Supplying physical chassis framework tooling & mechanical components.'
   },
   { 
     name: 'REV Robotics', 
-    logo: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=600&h=300', 
+    logo: '/src/assets/images/sponsors/rev_robotics.png', 
     tier: 'Gold Partner',
     desc: 'Supplying advanced motor controls, absolute encoders and wiring kits.'
   },
   { 
     name: 'SolidWorks', 
-    logo: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600&h=300', 
+    logo: '/src/assets/images/sponsors/solidworks.png', 
     tier: 'Titanium Sponsor',
     desc: 'Empowering our builders with master level 3D CAD design licenses.'
   },
   { 
     name: 'Altium Designer', 
-    logo: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=600&h=300', 
+    logo: '/src/assets/images/sponsors/altium_designer.png', 
     tier: 'Silver Sponsor',
     desc: 'Guiding custom printed circuit board layout architectures.'
   }
@@ -757,6 +790,48 @@ export default function App() {
               </div>
             </div>
 
+            {/* Seasonal Machine Design Showcase (incorporates the actual local PNG hero file) */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-8 overflow-hidden relative shadow-sm hover:border-[var(--accent)]/35 transition-all duration-300" id="machine-spec-showcase">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/[0.03] rounded-full blur-3xl pointer-events-none" />
+              
+              {/* Image side */}
+              <div className="md:col-span-5 relative aspect-[16/11] rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-primary)] group">
+                <ImageWithFallback 
+                  src="/src/assets/images/vortex_robot_hero_1780695937145.png" 
+                  alt="Vortex Competition Robot Hero design representation" 
+                  className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                />
+              </div>
+
+              {/* Specifications details side */}
+              <div className="md:col-span-7 flex flex-col gap-4 text-left">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase px-2 py-0.5 rounded bg-[var(--accent)]/15 border border-[var(--accent)]/20">Specifications</span>
+                  <span className="text-[9px] font-mono text-[var(--text-secondary)] uppercase">FTC SEASON MACHINE v1.0</span>
+                </div>
+                <h3 className="font-sans text-2xl font-black text-[var(--text-primary)] uppercase tracking-wide">
+                  Stealth Mecanum Drivetrain
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  Our rookie engineering subdivision has modeled and custom manufactured a high-precision aerospace-grade aluminum 4-wheel mecanum drivetrain base. Powered by goBILDA 19.2:1 Yellow Jacket motors and managed by real-time Pinpoint absolute odometry.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
+                  <div className="border border-[var(--border)] bg-[var(--bg-primary)]/50 p-2.5 rounded-lg text-left">
+                    <span className="text-[9px] font-mono text-[var(--text-secondary)] uppercase block">Drive Ratio</span>
+                    <span className="text-xs font-black text-[var(--text-primary)] uppercase tracking-wide">19.2:1 @ 312RPM</span>
+                  </div>
+                  <div className="border border-[var(--border)] bg-[var(--bg-primary)]/50 p-2.5 rounded-lg text-left">
+                    <span className="text-[9px] font-mono text-[var(--text-secondary)] uppercase block">Control Hub</span>
+                    <span className="text-xs font-black text-[var(--text-primary)] uppercase tracking-wide">REV Controls</span>
+                  </div>
+                  <div className="border border-[var(--border)] bg-[var(--bg-primary)]/50 p-2.5 rounded-lg text-left">
+                    <span className="text-[9px] font-mono text-[var(--text-secondary)] uppercase block">Odometry</span>
+                    <span className="text-xs font-black text-[var(--text-primary)] uppercase tracking-wide">3-Wheel Pinpoint</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -808,11 +883,10 @@ export default function App() {
 
                         {/* Photo directly underneath their description (as explicitly requested!) */}
                         <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-primary)] group">
-                          <img 
+                          <ImageWithFallback 
                             src={placeholderPhoto} 
                             alt={`Portrait of ${member.name}`}
                             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                            referrerPolicy="no-referrer"
                           />
                         </div>
 
@@ -846,7 +920,7 @@ export default function App() {
                     role: 'Lead Technical Mentor',
                     department: 'Coaching',
                     bio: 'With over 10 years of aerospace engineering experience, Elena teaches Vortex structural math, electrical safety, and industrial CAD standards.',
-                    photo: portraits['6'] || 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=600&h=450',
+                    photo: '/src/assets/images/portraits/coach_elena_rostova.png',
                     yearsExperience: 8
                   },
                   {
@@ -855,7 +929,7 @@ export default function App() {
                     role: 'Control Theory Consultant',
                     department: 'Advisory',
                     bio: 'Arthur is an associate professor of engineering who guides our developers on advanced sensor fusion matrices and smooth acceleration pathing curves.',
-                    photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=600&h=450',
+                    photo: '/src/assets/images/portraits/advisor_arthur.png',
                     yearsExperience: 5
                   },
                   {
@@ -864,7 +938,7 @@ export default function App() {
                     role: 'Sponsorship & Outreach Advisor',
                     department: 'Business Advisory',
                     bio: 'Sarah coaches the design team on budgeting, industry partner presentations, public speaking, and building a sustainable high school robotics brand.',
-                    photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600&h=450',
+                    photo: '/src/assets/images/portraits/advisor_sarah.png',
                     yearsExperience: 4
                   },
                   {
@@ -873,7 +947,7 @@ export default function App() {
                     role: 'Manufacturing & Machining Mentor',
                     department: 'Fabrication',
                     bio: 'A veteran machinist and shop owner who teaches safe operation of CNC routers, manual lathe operations, and close-tolerance chassis fabrication.',
-                    photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=600&h=450',
+                    photo: '/src/assets/images/portraits/advisor_marcus.png',
                     yearsExperience: 6
                   },
                   {
@@ -882,7 +956,7 @@ export default function App() {
                     role: 'Software & Logic Advisor',
                     department: 'Programming',
                     bio: 'A research systems software architect who guides the programming sub-division in thread-safe multi-threading, custom telemetry loops, and vision processing filters.',
-                    photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=600&h=450',
+                    photo: '/src/assets/images/portraits/advisor_lisa.png',
                     yearsExperience: 7
                   }
                 ].map((mentor) => (
@@ -915,11 +989,10 @@ export default function App() {
 
                       {/* Photo directly underneath their description (exactly matching student card layout!) */}
                       <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-primary)] group">
-                        <img 
+                        <ImageWithFallback 
                           src={mentor.photo} 
                           alt={`Portrait of ${mentor.name}`}
                           className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                          referrerPolicy="no-referrer"
                         />
                       </div>
 
@@ -1023,11 +1096,10 @@ export default function App() {
               <div className="flex flex-col md:flex-row items-center gap-8 py-4">
                 {/* Logo Image */}
                 <div className="w-full md:w-1/2 aspect-[16/10] bg-[var(--bg-primary)]/45 border border-[var(--border)] rounded-xl overflow-hidden relative group flex items-center justify-center shrink-0">
-                  <img 
+                  <ImageWithFallback 
                     src={sponsorLogos[currentSlide].logo} 
                     alt={sponsorLogos[currentSlide].name}
                     className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-300"
-                    referrerPolicy="no-referrer"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[var(--bg-primary)] to-transparent p-4 flex flex-col justify-end">
                     <span className="text-[9px] font-mono font-black text-[var(--accent)] tracking-wider uppercase">
