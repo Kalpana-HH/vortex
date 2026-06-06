@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image } from 'lucide-react';
 import { teamMembers } from './data/team';
 
-const vortexLogo = '/src/vortex_logo.png';
+const vortexLogo = './vortex_logo.png';
 
 type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery';
 
