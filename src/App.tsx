@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image } from 'lucide-react';
 import { teamMembers } from './data/team';
 
-const vortexLogo = '/src/assets/images/vortex_logo.png';
-const vortexLongLogo = '/src/assets/images/Vortex_long.png';
+const vortexLogo = '/assets/images/vortex_logo.png';
+const vortexLongLogo = '/assets/images/Vortex_long.png';
 
 // Reusable Image component that handles missing imagery by rendering an elegant, styled SVG canvas fallback with technical indicators in the active theme
 const ImageWithFallback = ({ src, alt, className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
@@ -125,7 +125,7 @@ const galleryItems = [
     id: 1,
     title: 'Precision Chassis Milling',
     caption: 'Custom machining of our lightweight aerospace-grade aluminum chassis base-plate on our shop router.',
-    image: '/src/assets/images/gallery/milling.png',
+    image: '/assets/images/gallery/milling.png',
     category: 'MECHANICAL',
     date: 'July 2026'
   },
@@ -133,7 +133,7 @@ const galleryItems = [
     id: 2,
     title: 'Custom PCB Circuit Design',
     caption: 'Prototyping dynamic sensor routing hubs inside Altium to sync absolute encoders and pinpoint system modules.',
-    image: '/src/assets/images/gallery/pcb.png',
+    image: '/assets/images/gallery/pcb.png',
     category: 'ELECTRONICS',
     date: 'June 2026'
   },
@@ -141,7 +141,7 @@ const galleryItems = [
     id: 3,
     title: '3D CAD Mecanum Assembly',
     caption: 'Optimizing high-reduction gearbox placements and motor clearance inside OnShape.',
-    image: '/src/assets/images/gallery/mecanum_cad.png',
+    image: '/assets/images/gallery/mecanum_cad.png',
     category: 'CAD MODELS',
     date: 'June 2026'
   },
@@ -149,7 +149,7 @@ const galleryItems = [
     id: 4,
     title: 'Electrical Harness Inspection',
     caption: 'Testing clean wire loom protections, power distribution modules, and custom copper bus connections.',
-    image: '/src/assets/images/gallery/wiring.png',
+    image: '/assets/images/gallery/wiring.png',
     category: 'ELECTRONICS',
     date: 'August 2026'
   },
@@ -157,7 +157,7 @@ const galleryItems = [
     id: 5,
     title: 'Initial Team Brainstorm Block',
     caption: 'Texas rookie builders studying math bounds, game elements, design spreadsheets, and robot rules.',
-    image: '/src/assets/images/gallery/team_brainstorm.png',
+    image: '/assets/images/gallery/team_brainstorm.png',
     category: 'WORKSHOPS',
     date: 'June 2026'
   },
@@ -165,7 +165,7 @@ const galleryItems = [
     id: 6,
     title: 'Trajectory Polynomial Plotting',
     caption: 'Drafting bezier mathematical spline curves to calculate path control velocity parameters.',
-    image: '/src/assets/images/gallery/trajectory.png',
+    image: '/assets/images/gallery/trajectory.png',
     category: 'CAD MODELS',
     date: 'August 2026'
   }
@@ -306,42 +306,42 @@ const GalleryPageView = () => {
 
 // Team member portraits using local actual-path PNG configurations
 const portraits: Record<string, string> = {
-  '1': '/src/assets/images/portraits/person_1.png', // Alex Rivera
-  '2': '/src/assets/images/portraits/person_2.png', // Sarah Chen
-  '3': '/src/assets/images/portraits/person_3.png', // Marcus Vance
-  '4': '/src/assets/images/portraits/person_4.png', // Emily Taylor
-  '5': '/src/assets/images/portraits/person_5.png', // David Kim
-  '6': '/src/assets/images/portraits/person_6.png'  // Coach Elena Rostova (person_6)
+  '1': '/assets/images/portraits/person_1.png', // Alex Rivera
+  '2': '/assets/images/portraits/person_2.png', // Sarah Chen
+  '3': '/assets/images/portraits/person_3.png', // Marcus Vance
+  '4': '/assets/images/portraits/person_4.png', // Emily Taylor
+  '5': '/assets/images/portraits/person_5.png', // David Kim
+  '6': '/assets/images/portraits/person_6.png'  // Coach Elena Rostova (person_6)
 };
 
 const sponsorLogos = [
   { 
     name: 'NASA Jet Propulsion Lab', 
-    logo: '/src/assets/images/sponsors/nasa_jpl.png', 
+    logo: '/assets/images/sponsors/nasa_jpl.png', 
     tier: 'Titanium Sponsor',
     desc: 'Advancing aerospace system research and technical grant support.'
   },
   { 
     name: 'goBILDA', 
-    logo: '/src/assets/images/sponsors/gobilda.png', 
+    logo: '/assets/images/sponsors/gobilda.png', 
     tier: 'Gold Partner',
     desc: 'Supplying physical chassis framework tooling & mechanical components.'
   },
   { 
     name: 'REV Robotics', 
-    logo: '/src/assets/images/sponsors/rev_robotics.png', 
+    logo: '/assets/images/sponsors/rev_robotics.png', 
     tier: 'Gold Partner',
     desc: 'Supplying advanced motor controls, absolute encoders and wiring kits.'
   },
   { 
     name: 'SolidWorks', 
-    logo: '/src/assets/images/sponsors/solidworks.png', 
+    logo: '/assets/images/sponsors/solidworks.png', 
     tier: 'Titanium Sponsor',
     desc: 'Empowering our builders with master level 3D CAD design licenses.'
   },
   { 
     name: 'Altium Designer', 
-    logo: '/src/assets/images/sponsors/altium_designer.png', 
+    logo: '/assets/images/sponsors/altium_designer.png', 
     tier: 'Silver Sponsor',
     desc: 'Guiding custom printed circuit board layout architectures.'
   }
@@ -798,7 +798,7 @@ export default function App() {
               {/* Image side */}
               <div className="md:col-span-5 relative aspect-[16/11] rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-primary)] group">
                 <ImageWithFallback 
-                  src="/src/assets/images/robot_img.png" 
+                  src="/assets/images/robot_img.png" 
                   alt="Vortex Competition Robot Hero design representation" 
                   className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
                 />
@@ -921,7 +921,7 @@ export default function App() {
                     role: 'Lead Technical Mentor',
                     department: 'Coaching',
                     bio: 'With over 10 years of aerospace engineering experience, Elena teaches Vortex structural math, electrical safety, and industrial CAD standards.',
-                    photo: '/src/assets/images/portraits/person_6.png',
+                    photo: '/assets/images/portraits/person_6.png',
                     yearsExperience: 8
                   },
                   {
@@ -930,7 +930,7 @@ export default function App() {
                     role: 'Control Theory Consultant',
                     department: 'Advisory',
                     bio: 'Arthur is an associate professor of engineering who guides our developers on advanced sensor fusion matrices and smooth acceleration pathing curves.',
-                    photo: '/src/assets/images/portraits/person_7.png',
+                    photo: '/assets/images/portraits/person_7.png',
                     yearsExperience: 5
                   },
                   {
@@ -939,7 +939,7 @@ export default function App() {
                     role: 'Sponsorship & Outreach Advisor',
                     department: 'Business Advisory',
                     bio: 'Sarah coaches the design team on budgeting, industry partner presentations, public speaking, and building a sustainable high school robotics brand.',
-                    photo: '/src/assets/images/portraits/person_8.png',
+                    photo: '/assets/images/portraits/person_8.png',
                     yearsExperience: 4
                   },
                   {
@@ -948,7 +948,7 @@ export default function App() {
                     role: 'Manufacturing & Machining Mentor',
                     department: 'Fabrication',
                     bio: 'A veteran machinist and shop owner who teaches safe operation of CNC routers, manual lathe operations, and close-tolerance chassis fabrication.',
-                    photo: '/src/assets/images/portraits/person_9.png',
+                    photo: '/assets/images/portraits/person_9.png',
                     yearsExperience: 6
                   },
                   {
@@ -957,7 +957,7 @@ export default function App() {
                     role: 'Software & Logic Advisor',
                     department: 'Programming',
                     bio: 'A research systems software architect who guides the programming sub-division in thread-safe multi-threading, custom telemetry loops, and vision processing filters.',
-                    photo: '/src/assets/images/portraits/person_10.png',
+                    photo: '/assets/images/portraits/person_10.png',
                     yearsExperience: 7
                   }
                 ].map((mentor) => (
