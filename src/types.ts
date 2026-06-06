@@ -24,6 +24,7 @@ export interface TeamMember {
   favTool: string;
   favComponent: string;
   quote: string;
+  yearsExperience?: number;
 }
 
 export interface TrainingResource {

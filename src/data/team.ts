@@ -9,7 +9,8 @@ export const teamMembers: TeamMember[] = [
     bio: 'Alex handles CAD development and final physical assembly. He spends too much time adjusting belt tensions and finding missing 10-32 screws.',
     favTool: 'Dewalt Cordless Band Saw',
     favComponent: 'goBILDA Viper Slide Kit',
-    quote: 'If it doesn’t fit, CAD it again. If it still doesn’t fit, grab the dremel.'
+    quote: 'If it doesn’t fit, CAD it again. If it still doesn’t fit, grab the dremel.',
+    yearsExperience: 3
   },
   {
     id: '2',
@@ -19,7 +20,8 @@ export const teamMembers: TeamMember[] = [
     bio: 'Sarah leads our programming team. She configured our RoadRunner three-wheel odometry and maintains our autonomous neural network detections.',
     favTool: 'IntelliJ IDEA & Git Kraken',
     favComponent: 'REV Control Hub & Pinpoint Odometry',
-    quote: 'It compiled on my machine, so user error.'
+    quote: 'It compiled on my machine, so user error.',
+    yearsExperience: 4
   },
   {
     id: '3',
@@ -29,7 +31,8 @@ export const teamMembers: TeamMember[] = [
     bio: 'Marcus is an expert in aluminum router manufacturing and custom intake designs. He ensures our vacuum grabbers hold game pieces perfectly.',
     favTool: '3D Printer (Voron 2.4)',
     favComponent: 'Heavy Duty 393RPM goBILDA Yellow Jacket Motors',
-    quote: 'Fillet everything. Sharp edges are for team numbers, not aluminum.'
+    quote: 'Fillet everything. Sharp edges are for team numbers, not aluminum.',
+    yearsExperience: 2
   },
   {
     id: '4',
@@ -39,7 +42,8 @@ export const teamMembers: TeamMember[] = [
     bio: 'Emily connects Vortex with local STEM initiatives and edits our Engineering Portfolio. She coordinate workshops at middle schools.',
     favTool: 'Canva Pro & Notion Workspace',
     favComponent: 'Polished Carbon Fiber Plates for aesthetics',
-    quote: 'Robotics isn’t just about the metal; it’s about the community we build!'
+    quote: 'Robotics isn’t just about the metal; it’s about the community we build!',
+    yearsExperience: 3
   },
   {
     id: '5',
@@ -49,7 +53,8 @@ export const teamMembers: TeamMember[] = [
     bio: 'David maintains our absolute encoders, distance sensors, and limelight cameras. He ensures our autos are millisecond-perfect.',
     favTool: 'Logic Analyzer & Oscilloscope',
     favComponent: 'Limelight 3G Vision Processing Camera',
-    quote: 'Sensing is believing, though sometimes the PID disagrees.'
+    quote: 'Sensing is believing, though sometimes the PID disagrees.',
+    yearsExperience: 1
   },
   {
     id: '6',
@@ -59,6 +64,7 @@ export const teamMembers: TeamMember[] = [
     bio: 'With over 10 years of aerospace engineering experience, Elena teaches Vortex structural math, electrical safety, and industrial CAD standards.',
     favTool: 'Vernier Calipers & Torque Wrench',
     favComponent: 'Planetary Gearboxes',
-    quote: 'Measure twice, cut once, document always.'
+    quote: 'Measure twice, cut once, document always.',
+    yearsExperience: 8
   }
 ];
