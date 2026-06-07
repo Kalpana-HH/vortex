@@ -304,6 +304,8 @@ const GalleryPageView = () => {
   );
 };
 
+
+
 // Team member portraits using local actual-path PNG configurations
 const portraits: Record<string, string> = {
   '1': '/assets/images/portraits/person_1.png', // Alex Rivera
@@ -1547,6 +1549,10 @@ export default function App() {
               </form>
             </div>
           </div>
+        )}
+
+        {activePage === 'gallery' && (
+          <GalleryPageView />
         )}
 
       </main>
