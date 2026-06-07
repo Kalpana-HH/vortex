@@ -361,6 +361,11 @@ export default function App() {
   const [contactStatus, setContactStatus] = useState<'idle' | 'success' | 'error' | 'pending_activation'>('idle');
   const [contactServerMessage, setContactServerMessage] = useState('');
 
+  // Animated placeholder typewriter states
+  const [namePlaceholder, setNamePlaceholder] = useState('');
+  const [emailPlaceholder, setEmailPlaceholder] = useState('');
+  const [messagePlaceholder, setMessagePlaceholder] = useState('');
+
   // Style customization / theme engine states
   const [theme, setTheme] = useState<'light' | 'custom'>('light');
   const [customizerOpen, setCustomizerOpen] = useState(false);
@@ -426,6 +431,118 @@ export default function App() {
     }
   }, [activePage]);
 
+  // Typewriter effect for Name input placeholder
+  useEffect(() => {
+    const textToType = "Type your name here";
+    let index = 0;
+    let isDeleting = false;
+    let timer: NodeJS.Timeout;
+
+    const handleType = () => {
+      if (!isDeleting) {
+        setNamePlaceholder(textToType.substring(0, index + 1));
+        index++;
+        if (index === textToType.length) {
+          isDeleting = true;
+          timer = setTimeout(handleType, 2200); // look finished
+        } else {
+          timer = setTimeout(handleType, 100);
+        }
+      } else {
+        setNamePlaceholder(textToType.substring(0, index - 1));
+        index--;
+        if (index === 0) {
+          isDeleting = false;
+          timer = setTimeout(handleType, 1000); // pause empty
+        } else {
+          timer = setTimeout(handleType, 60);
+        }
+      }
+    };
+
+    timer = setTimeout(handleType, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Typewriter effect for Email input placeholder
+  useEffect(() => {
+    const textToType = "Type your email here";
+    let index = 0;
+    let isDeleting = false;
+    let timer: NodeJS.Timeout;
+
+    const handleType = () => {
+      if (!isDeleting) {
+        setEmailPlaceholder(textToType.substring(0, index + 1));
+        index++;
+        if (index === textToType.length) {
+          isDeleting = true;
+          timer = setTimeout(handleType, 2200);
+        } else {
+          timer = setTimeout(handleType, 100);
+        }
+      } else {
+        setEmailPlaceholder(textToType.substring(0, index - 1));
+        index--;
+        if (index === 0) {
+          isDeleting = false;
+          timer = setTimeout(handleType, 1000);
+        } else {
+          timer = setTimeout(handleType, 60);
+        }
+      }
+    };
+
+    timer = setTimeout(handleType, 900);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Typewriter effect for Message textarea placeholder
+  useEffect(() => {
+    const ideasList = [
+      "What's the process to join this team?",
+      "How can I sponsor you?",
+      "Can we run autonomous routines together?",
+      "Do you want to run some practice games?",
+      "Can I request a new idea for the robot?",
+      "Can I request a new idea for the website?",
+      "Can I request a new idea for the scouting?",
+      "Can we run some scrimmage games at your field?",
+      "Can we set up an autonomous alliance test?"
+    ];
+    let ideaIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let timer: NodeJS.Timeout;
+
+    const handleType = () => {
+      const currentIdea = ideasList[ideaIndex];
+      if (!isDeleting) {
+        setMessagePlaceholder(currentIdea.substring(0, charIndex + 1));
+        charIndex++;
+        if (charIndex === currentIdea.length) {
+          isDeleting = true;
+          timer = setTimeout(handleType, 2000); // hold at end of phrase
+        } else {
+          timer = setTimeout(handleType, 80);
+        }
+      } else {
+        setMessagePlaceholder(currentIdea.substring(0, charIndex - 1));
+        charIndex--;
+        if (charIndex === 0) {
+          isDeleting = false;
+          ideaIndex = (ideaIndex + 1) % ideasList.length;
+          timer = setTimeout(handleType, 1000);
+        } else {
+          timer = setTimeout(handleType, 40);
+        }
+      }
+    };
+
+    timer = setTimeout(handleType, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
   const pages: PageItem[] = [
     { id: 'home', label: 'Home' },
     { id: 'team', label: 'Roster' },
@@ -475,9 +592,15 @@ export default function App() {
           setContactName('');
           setContactEmail('');
           setContactMessage('');
+          setTimeout(() => {
+            navigateTo('home');
+          }, 6500);
         } else {
           // If response is OK but success is false, FormSubmit requires email activation first.
           setContactStatus('pending_activation');
+          setTimeout(() => {
+            navigateTo('home');
+          }, 6500);
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -1339,6 +1462,7 @@ export default function App() {
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                       <strong className="font-bold uppercase tracking-wider">Successful!</strong>
                     </div>
+                    <span className="block mt-1 text-[11px] text-emerald-300/80">Returning to the home page in a few seconds...</span>
                   </div>
                 )}
 
@@ -1351,6 +1475,7 @@ export default function App() {
                     <p className="mb-2 text-stone-200 text-[11px]">
                       Please check your inbox at <strong>Hraha0311@gmail.com</strong> for a FormSubmit activation email and click the confirmation link to start receiving messages.
                     </p>
+                    <span className="block mt-1.5 text-[11px] text-amber-300/80 font-mono">Returning to the home page in a few seconds...</span>
                   </div>
                 )}
 
@@ -1373,7 +1498,7 @@ export default function App() {
                     onChange={(e) => setContactName(e.target.value)}
                     disabled={contactSubmitting}
                     className="w-full rounded bg-[var(--bg-primary)] border border-[var(--border)] p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" 
-                    placeholder="Alex Smith" 
+                    placeholder={namePlaceholder} 
                   />
                 </div>
                 <div>
@@ -1385,7 +1510,7 @@ export default function App() {
                     onChange={(e) => setContactEmail(e.target.value)}
                     disabled={contactSubmitting}
                     className="w-full rounded bg-[var(--bg-primary)] border border-[var(--border)] p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" 
-                    placeholder="alex@example.com" 
+                    placeholder={emailPlaceholder} 
                   />
                 </div>
                 <div>
@@ -1397,7 +1522,7 @@ export default function App() {
                     onChange={(e) => setContactMessage(e.target.value)}
                     disabled={contactSubmitting}
                     className="w-full rounded bg-[var(--bg-primary)] border border-[var(--border)] p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" 
-                    placeholder="Let us know what you want to collaborate on..." 
+                    placeholder={messagePlaceholder} 
                   />
                 </div>
                 
