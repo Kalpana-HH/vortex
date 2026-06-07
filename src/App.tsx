@@ -450,38 +450,43 @@ export default function App() {
     setContactServerMessage('');
 
     try {
-      const response = await fetch('/api/contact', {
+      const response = await fetch('https://formsubmit.co/ajax/Hraha0311@gmail.com', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           name: contactName,
           email: contactEmail,
           message: contactMessage,
+          _subject: `New Team Vortex Contact Inquiry from ${contactName}`,
+          _honey: '', // Honeypot spam protection
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
+        const isSuccess = data.success === true || data.success === 'true';
         setContactServerMessage(data.message || '');
         
-        if (data.success) {
+        if (isSuccess) {
           setContactStatus('success');
           setContactName('');
           setContactEmail('');
           setContactMessage('');
         } else {
-          // If response is OK but success is false, it means FormSubmit.co needs activation!
+          // If response is OK but success is false, FormSubmit requires email activation first.
           setContactStatus('pending_activation');
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setContactServerMessage(errorData.error || 'Server rejected submission');
+        setContactServerMessage(errorData.message || errorData.error || 'Courier rejected submission');
         setContactStatus('error');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Submit Error:", err);
+      setContactServerMessage(err?.message || "Check network connection and try again.");
       setContactStatus('error');
     } finally {
       setContactSubmitting(false);
