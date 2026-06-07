@@ -149,8 +149,8 @@ export default function OnboardingTour({
     {
       title: "Filter the Roster",
       description: "Want to see who is on the team? Filter high school students easily by their specialization: Mechanical, Software, or Outreach.",
-      selector: "#team-department-filter-controls",
-      mobileSelector: "#nav-link-team",
+      selector: "#team-header-landmark",
+      mobileSelector: "#team-header-landmark",
       page: "team",
       icon: Users,
       action: () => {
@@ -162,7 +162,7 @@ export default function OnboardingTour({
       title: "Our Journey",
       description: "Check out our history, design ideas, and planned milestones! Here you can follow our timeline and read our current and future thoughts.",
       selector: "#journey-header-landmark",
-      mobileSelector: "#nav-link-journey",
+      mobileSelector: "#journey-header-landmark",
       page: "journey",
       icon: Award,
       action: () => {
@@ -174,7 +174,7 @@ export default function OnboardingTour({
       title: "Sponsor Vortex",
       description: "Interested in supporting or partnership? Visit our sponsors segment to see current community patrons and find out how to back us!",
       selector: "#sponsors-header-landmark",
-      mobileSelector: "#nav-link-sponsors",
+      mobileSelector: "#sponsors-header-landmark",
       page: "sponsors",
       icon: Handshake,
       action: () => {
@@ -185,8 +185,8 @@ export default function OnboardingTour({
     {
       title: "Search Our Assets",
       description: "Looking for CAD files, guides, or Pedro Pathing configurations? Search our repository instantly by typing CAD, PID, or Pedro.",
-      selector: "#resources-dynamic-search-box",
-      mobileSelector: "#nav-link-resources",
+      selector: "#resources-header-landmark",
+      mobileSelector: "#resources-header-landmark",
       page: "resources",
       icon: Search,
       action: () => {
@@ -197,8 +197,8 @@ export default function OnboardingTour({
     {
       title: "Get in Touch",
       description: "Have questions, want to sponsor the team, or need a safety demo at your school? Send a message directly to our team captains here!",
-      selector: "#cta-nav-button",
-      mobileSelector: "#contact-page-view",
+      selector: "#contact-header-landmark",
+      mobileSelector: "#contact-header-landmark",
       page: "contact",
       icon: Mail,
       action: () => {
@@ -210,15 +210,16 @@ export default function OnboardingTour({
       title: "Follow Our Socials",
       description: "Stay connected! Easily reach our community YouTube guides, Instagram capture reels, Discord server, and Spotify workspace tracker directly from the footer of any page.",
       selector: "#vortex-footer-socials",
+      mobileSelector: "#vortex-footer-socials",
       page: "contact",
       icon: Compass,
       action: () => {
         setCustomizerOpen(false);
-        // Scroll smoothly to the very bottom to highlight the footer socials beautifully
+        // Scroll to the very bottom to highlight the footer socials beautifully
         const timer = setTimeout(() => {
           const el = document.getElementById('vortex-footer-socials');
           if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.scrollIntoView({ behavior: isMobile ? 'auto' : 'smooth', block: 'center' });
           }
         }, 150);
         return () => clearTimeout(timer);
@@ -251,26 +252,38 @@ export default function OnboardingTour({
       return;
     }
 
-    const updateCoords = () => {
-      const step = steps[currentStepIndex];
-      const selector = (isMobile && step.mobileSelector) ? step.mobileSelector : step.selector;
-      const element = document.querySelector(selector);
+    const step = steps[currentStepIndex];
+    const selector = (isMobile && step.mobileSelector) ? step.mobileSelector : step.selector;
 
-      if (element) {
-        const rect = element.getBoundingClientRect();
+    // 1. Smoothly scroll target into the center or top of the viewport ONLY ONCE
+    const runNavigationTransition = () => {
+      if (step.action) {
+        step.action();
+      } else {
+        const element = document.querySelector(selector);
+        if (element) {
+          element.scrollIntoView({
+            behavior: isMobile ? 'auto' : 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+        }
+      }
+    };
+
+    runNavigationTransition();
+
+    // 2. Track coordinates continuously at 50 FPS for 1.5s to smoothly track scrolling animations and layout shifts without jitter
+    const updateCoordsOnly = () => {
+      const el = document.querySelector(selector);
+      if (el) {
+        const rect = el.getBoundingClientRect();
         if (rect.width > 0 && rect.height > 0) {
           setTargetCoords({
             x: rect.left + window.scrollX,
             y: rect.top + window.scrollY,
             width: rect.width,
             height: rect.height
-          });
-
-          // Smoothly scroll element into the center of the viewport
-          element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
           });
           return;
         }
@@ -285,23 +298,24 @@ export default function OnboardingTour({
       });
     };
 
-    // Run custom action
-    const currentStep = steps[currentStepIndex];
-    if (currentStep && currentStep.action) {
-      currentStep.action();
-    }
+    // Run first calculation immediately
+    updateCoordsOnly();
 
-    const timer = setTimeout(() => {
-      updateCoords();
-    }, 380);
+    // Spawn 1.5s interval tracker to trace the target during scrolling or transitions
+    const trackingInterval = setInterval(updateCoordsOnly, 20);
+    const trackingTimeout = setTimeout(() => {
+      clearInterval(trackingInterval);
+    }, 1500);
 
-    window.addEventListener('scroll', updateCoords, { passive: true });
-    window.addEventListener('resize', updateCoords);
+    // Keep event listeners active for user interaction shifts
+    window.addEventListener('scroll', updateCoordsOnly, { passive: true });
+    window.addEventListener('resize', updateCoordsOnly);
 
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener('scroll', updateCoords);
-      window.removeEventListener('resize', updateCoords);
+      clearInterval(trackingInterval);
+      clearTimeout(trackingTimeout);
+      window.removeEventListener('scroll', updateCoordsOnly);
+      window.removeEventListener('resize', updateCoordsOnly);
     };
   }, [currentStepIndex, isMobile, activePage]);
 

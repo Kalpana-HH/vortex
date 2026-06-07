@@ -1167,7 +1167,7 @@ export default function App() {
               <div className="border-b border-[var(--border)] pb-6 text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                   <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">The Crew</span>
-                  <h2 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)]">Meet Team Vortex</h2>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)]" id="team-header-landmark">Meet Team Vortex</h2>
                   <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl">
                     A community of high school builders, software developers, and outreach leaders custom manufacturing robotics for FTC competition.
                   </p>
@@ -1521,7 +1521,7 @@ export default function App() {
               <span className="text-[10px] font-black tracking-[0.25em] text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-1 rounded-md mb-3">
                 FTC Standard Control Ecosystem
               </span>
-              <h2 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-wide uppercase">
+              <h2 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-wide uppercase" id="resources-header-landmark">
                 Pedro Pathing Hub
               </h2>
               <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl leading-relaxed">
@@ -1682,7 +1682,7 @@ export default function App() {
                   </span>
                 )}
               </div>
-              <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase mt-1">Get In Touch</h3>
+              <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase mt-1" id="contact-header-landmark">Get In Touch</h3>
               <p className="text-xs text-[var(--text-secondary)] mt-2 mb-6">
                 Are you a local business owner looking to sponsor, a school wishing for safety demonstrations, or a student wanting to join Vortex? Drop our captain a line!
               </p>
