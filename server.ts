@@ -112,6 +112,49 @@ Explain the kinematics briefly and list suggestions for hardware tuning (like pi
   }
 });
 
+// API endpoint for processing contact submissions and forwarding to the team captain's target email
+app.post("/api/contact", async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: "All form fields (name, email, message) are required." });
+    }
+
+    // Forward the details to FormSubmit, securely routing to the team email address
+    const recipient = "Hraha0311@gmail.com";
+    const response = await fetch(`https://formsubmit.co/ajax/${recipient}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        message: message,
+        _subject: `New Team Vortex Contact Inquiry from ${name}`,
+        _honey: "", // Honeypot spam protection
+      })
+    });
+
+    if (response.ok) {
+      const data: any = await response.json();
+      const isActuallySuccess = data.success === true || data.success === "true";
+      res.json({ 
+        success: isActuallySuccess, 
+        message: data.message || "Message forwarded successfully!" 
+      });
+    } else {
+      const errText = await response.text();
+      console.error("FormSubmit Forwarding Error:", errText);
+      res.status(502).json({ error: "Failed to forward contact detail securely. Please try again." });
+    }
+  } catch (error: any) {
+    console.error("Contact API Server Error:", error);
+    res.status(500).json({ error: error?.message || "Internal server error submitting contact form." });
+  }
+});
+
 // Configure Vite middleware in development or direct static folder serving in production.
 async function initServer() {
   if (process.env.NODE_ENV !== "production") {

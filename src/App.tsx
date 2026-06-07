@@ -353,6 +353,14 @@ export default function App() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [sponsorText, setSponsorText] = useState('');
 
+  // Contact Form States
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [contactStatus, setContactStatus] = useState<'idle' | 'success' | 'error' | 'pending_activation'>('idle');
+  const [contactServerMessage, setContactServerMessage] = useState('');
+
   // Style customization / theme engine states
   const [theme, setTheme] = useState<'light' | 'custom'>('light');
   const [customizerOpen, setCustomizerOpen] = useState(false);
@@ -432,6 +440,52 @@ export default function App() {
     setActivePage(pageId);
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) return;
+    setContactSubmitting(true);
+    setContactStatus('idle');
+    setContactServerMessage('');
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: contactName,
+          email: contactEmail,
+          message: contactMessage,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setContactServerMessage(data.message || '');
+        
+        if (data.success) {
+          setContactStatus('success');
+          setContactName('');
+          setContactEmail('');
+          setContactMessage('');
+        } else {
+          // If response is OK but success is false, it means FormSubmit.co needs activation!
+          setContactStatus('pending_activation');
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setContactServerMessage(errorData.error || 'Server rejected submission');
+        setContactStatus('error');
+      }
+    } catch (err) {
+      console.error("Submit Error:", err);
+      setContactStatus('error');
+    } finally {
+      setContactSubmitting(false);
+    }
   };
 
   return (
@@ -1273,22 +1327,94 @@ export default function App() {
                 Are you a local business owner looking to sponsor, a school wishing for safety demonstrations, or a student wanting to join Vortex? Drop our captain a line!
               </p>
               
-              <form onSubmit={(e) => { e.preventDefault(); alert("Vortex received your message! We will get back to you within 24 hours."); }} className="flex flex-col gap-4">
+              <form onSubmit={handleContactSubmit} className="flex flex-col gap-4">
+                {contactStatus === 'success' && (
+                  <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs mb-2 animate-fadeIn">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <strong className="font-bold uppercase tracking-wider">Inquiry Sent Successfully!</strong>
+                    </div>
+                    <span>Your message has been processed and forwarded secure-side directly to our captain's workspace mailbox (<strong>Hraha0311@gmail.com</strong>). We will get back to you within 24 hours!</span>
+                  </div>
+                )}
+
+                {contactStatus === 'pending_activation' && (
+                  <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs mb-3 animate-fadeIn">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      <strong className="font-bold uppercase tracking-wider text-amber-300">Activation Action Required!</strong>
+                    </div>
+                    <p className="mb-2 text-amber-100/90 leading-relaxed font-mono text-[11px]">
+                      {contactServerMessage || "First submit? You need to activate your email to start receiving form submissions."}
+                    </p>
+                    <div className="p-2.5 rounded bg-amber-500/5 border border-amber-500/20 text-stone-200">
+                      <strong>How to solve this:</strong> Check your inbox (or spam folder) for <strong>Hraha0311@gmail.com</strong>. You should have received a confirmation email from <strong>FormSubmit</strong>. Once you click the link inside it, future form submissions will be delivered instantly!
+                    </div>
+                  </div>
+                )}
+
+                {contactStatus === 'error' && (
+                  <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs mb-2">
+                    <strong className="font-bold uppercase tracking-wider block mb-1">Delivery Failure</strong>
+                    <span>We encountered an issue forwarding your inquiry: {contactServerMessage || "Please check your network connection and try again."}</span>
+                  </div>
+                )}
+
                 <div>
                   <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-1">Your Name</label>
-                  <input required type="text" className="w-full rounded bg-[var(--bg-primary)] border border-[var(--border)] p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]" placeholder="Alex Smith" />
+                  <input 
+                    required 
+                    type="text" 
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    disabled={contactSubmitting}
+                    className="w-full rounded bg-[var(--bg-primary)] border border-[var(--border)] p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" 
+                    placeholder="Alex Smith" 
+                  />
                 </div>
                 <div>
                   <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-1">Your Email</label>
-                  <input required type="email" className="w-full rounded bg-[var(--bg-primary)] border border-[var(--border)] p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]" placeholder="alex@example.com" />
+                  <input 
+                    required 
+                    type="email" 
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    disabled={contactSubmitting}
+                    className="w-full rounded bg-[var(--bg-primary)] border border-[var(--border)] p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" 
+                    placeholder="alex@example.com" 
+                  />
                 </div>
                 <div>
                   <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-1">Message Detail</label>
-                  <textarea required rows={4} className="w-full rounded bg-[var(--bg-primary)] border border-[var(--border)] p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]" placeholder="Let us know what you want to collaborate on..." />
+                  <textarea 
+                    required 
+                    rows={4} 
+                    value={contactMessage}
+                    onChange={(e) => setContactMessage(e.target.value)}
+                    disabled={contactSubmitting}
+                    className="w-full rounded bg-[var(--bg-primary)] border border-[var(--border)] p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" 
+                    placeholder="Let us know what you want to collaborate on..." 
+                  />
                 </div>
-                <button type="submit" className="w-full rounded-md py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition cursor-pointer">
-                  Dispatch Message
+                
+                <button 
+                  type="submit" 
+                  disabled={contactSubmitting}
+                  className="w-full rounded-md py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {contactSubmitting ? (
+                    <>
+                      <Cpu className="w-4 h-4 animate-spin" />
+                      <span>Transacting Delivery...</span>
+                    </>
+                  ) : (
+                    <span>Dispatch Message</span>
+                  )}
                 </button>
+                
+                <div className="text-[9px] font-mono text-[var(--text-secondary)] text-center uppercase tracking-wider mt-1 block">
+                  🛡️ Securely processed and delivered via Team Vortex Mailer Routing
+                </div>
               </form>
             </div>
           </div>
