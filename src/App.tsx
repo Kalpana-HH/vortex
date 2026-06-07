@@ -1335,11 +1335,10 @@ export default function App() {
               <form onSubmit={handleContactSubmit} className="flex flex-col gap-4">
                 {contactStatus === 'success' && (
                   <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs mb-2 animate-fadeIn">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <strong className="font-bold uppercase tracking-wider">Inquiry Sent Successfully!</strong>
+                      <strong className="font-bold uppercase tracking-wider">Successful!</strong>
                     </div>
-                    <span>Your message has been processed and forwarded secure-side directly to our captain's workspace mailbox (<strong>Hraha0311@gmail.com</strong>). We will get back to you within 24 hours!</span>
                   </div>
                 )}
 
@@ -1347,21 +1346,21 @@ export default function App() {
                   <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs mb-3 animate-fadeIn">
                     <div className="flex items-center gap-2 mb-1.5">
                       <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                      <strong className="font-bold uppercase tracking-wider text-amber-300">Activation Action Required!</strong>
+                      <strong className="font-bold uppercase tracking-wider text-amber-300">Activation Required!</strong>
                     </div>
-                    <p className="mb-2 text-amber-100/90 leading-relaxed font-mono text-[11px]">
-                      {contactServerMessage || "First submit? You need to activate your email to start receiving form submissions."}
+                    <p className="mb-2 text-stone-200 text-[11px]">
+                      Please check your inbox at <strong>Hraha0311@gmail.com</strong> for a FormSubmit activation email and click the confirmation link to start receiving messages.
                     </p>
-                    <div className="p-2.5 rounded bg-amber-500/5 border border-amber-500/20 text-stone-200">
-                      <strong>How to solve this:</strong> Check your inbox (or spam folder) for <strong>Hraha0311@gmail.com</strong>. You should have received a confirmation email from <strong>FormSubmit</strong>. Once you click the link inside it, future form submissions will be delivered instantly!
-                    </div>
                   </div>
                 )}
 
                 {contactStatus === 'error' && (
-                  <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs mb-2">
-                    <strong className="font-bold uppercase tracking-wider block mb-1">Delivery Failure</strong>
-                    <span>We encountered an issue forwarding your inquiry: {contactServerMessage || "Please check your network connection and try again."}</span>
+                  <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs mb-2 animate-fadeIn">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-400" />
+                      <strong className="font-bold uppercase tracking-wider">Failed!</strong>
+                    </div>
+                    {contactServerMessage && <span className="block mt-1 text-[11px] text-red-300/90">{contactServerMessage}</span>}
                   </div>
                 )}
 
