@@ -161,7 +161,7 @@ export default function OnboardingTour({
     {
       title: "Our Journey",
       description: "Check out our history, design ideas, and planned milestones! Here you can follow our timeline and read our current and future thoughts.",
-      selector: "#journey-page-view",
+      selector: "#journey-header-landmark",
       mobileSelector: "#nav-link-journey",
       page: "journey",
       icon: Award,
@@ -173,7 +173,7 @@ export default function OnboardingTour({
     {
       title: "Sponsor Vortex",
       description: "Interested in supporting or partnership? Visit our sponsors segment to see current community patrons and find out how to back us!",
-      selector: "#sponsors-page-view",
+      selector: "#sponsors-header-landmark",
       mobileSelector: "#nav-link-sponsors",
       page: "sponsors",
       icon: Handshake,

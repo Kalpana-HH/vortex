@@ -1354,7 +1354,7 @@ export default function App() {
         {/* Render JOURNEY/TIMELINE + BLOGS segment with vertical chronological timeline */}
         {activePage === 'journey' && (
           <div className="mx-auto max-w-4xl px-6 py-12 flex flex-col gap-10" id="journey-page-view">
-            <div className="border-b border-[var(--border)] pb-6 text-left">
+            <div className="border-b border-[var(--border)] pb-6 text-left" id="journey-header-landmark">
               <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Our Timeline</span>
               <h2 className="text-3xl font-extrabold text-[var(--text-primary)] uppercase">Our Journey</h2>
               <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl">
@@ -1423,7 +1423,7 @@ export default function App() {
         {/* Render SPONSORS segment with animated automatic image slideshow and interactive typing button */}
         {activePage === 'sponsors' && (
           <div className="mx-auto max-w-4xl px-6 py-12 flex flex-col gap-12" id="sponsors-page-view">
-            <div className="border-b border-[var(--border)] pb-6 text-center">
+            <div className="border-b border-[var(--border)] pb-6 text-center" id="sponsors-header-landmark">
               <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Our Supporters</span>
               <h2 className="text-3xl font-extrabold text-[var(--text-primary)] uppercase">Vortex Sponsors</h2>
               <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl mx-auto">
