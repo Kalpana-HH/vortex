@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image } from 'lucide-react';
+import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { teamMembers } from './data/team';
+import OnboardingTour from './components/OnboardingTour';
 
 const vortexLogo = '/assets/images/vortex_logo.png';
 const vortexLongLogo = '/assets/images/Vortex_long.png';
@@ -362,6 +364,61 @@ export default function App() {
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const [contactStatus, setContactStatus] = useState<'idle' | 'success' | 'error' | 'pending_activation'>('idle');
   const [contactServerMessage, setContactServerMessage] = useState('');
+  const [isDraftAutosaved, setIsDraftAutosaved] = useState(false);
+
+  // New Features: Team Filter and Resource Search States
+  const [teamFilter, setTeamFilter] = useState<'All' | 'Mechanical' | 'Software' | 'Design & Outreach'>('All');
+  const [resourceSearch, setResourceSearch] = useState('');
+
+  // Auto-save contact form drafts
+  useEffect(() => {
+    const savedName = localStorage.getItem('vortex_draft_name');
+    const savedEmail = localStorage.getItem('vortex_draft_email');
+    const savedMessage = localStorage.getItem('vortex_draft_message');
+    if (savedName) setContactName(savedName);
+    if (savedEmail) setContactEmail(savedEmail);
+    if (savedMessage) setContactMessage(savedMessage);
+    if (savedName || savedEmail || savedMessage) {
+      setIsDraftAutosaved(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (contactName) {
+      localStorage.setItem('vortex_draft_name', contactName);
+      setIsDraftAutosaved(true);
+    } else {
+      localStorage.removeItem('vortex_draft_name');
+    }
+  }, [contactName]);
+
+  useEffect(() => {
+    if (contactEmail) {
+      localStorage.setItem('vortex_draft_email', contactEmail);
+      setIsDraftAutosaved(true);
+    } else {
+      localStorage.removeItem('vortex_draft_email');
+    }
+  }, [contactEmail]);
+
+  useEffect(() => {
+    if (contactMessage) {
+      localStorage.setItem('vortex_draft_message', contactMessage);
+      setIsDraftAutosaved(true);
+    } else {
+      localStorage.removeItem('vortex_draft_message');
+    }
+  }, [contactMessage]);
+
+  useEffect(() => {
+    if (!contactName && !contactEmail && !contactMessage) {
+      setIsDraftAutosaved(false);
+    }
+  }, [contactName, contactEmail, contactMessage]);
+
+  // Floating Scroll to Top and FAQ states
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   // Animated placeholder typewriter states
   const [namePlaceholder, setNamePlaceholder] = useState('');
@@ -389,6 +446,50 @@ export default function App() {
   const navBgValue = theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : (customBg + 'f0');
   const footerBgValue = theme === 'light' ? '#f1f5f9' : customBg;
   const btnTextValue = theme === 'light' ? '#ffffff' : '#000035';
+
+  // Toggle Scroll to Top Button on scroll and calculate scroll progress
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+
+      // Calculate scroll progress percentage
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight > 0) {
+        setScrollProgress((window.scrollY / totalHeight) * 100);
+      } else {
+        setScrollProgress(0);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Listen to Home key to trigger smooth scroll to top
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // If pressing Home key on page
+      if (e.key === 'Home') {
+        e.preventDefault();
+        scrollToTop();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Typewriter effect for Sponsor CTA Button
   useEffect(() => {
@@ -591,6 +692,10 @@ export default function App() {
         
         if (isSuccess) {
           setContactStatus('success');
+          // Clear drafted fields from localStorage
+          localStorage.removeItem('vortex_draft_name');
+          localStorage.removeItem('vortex_draft_email');
+          localStorage.removeItem('vortex_draft_message');
           setContactName('');
           setContactEmail('');
           setContactMessage('');
@@ -621,6 +726,22 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans flex flex-col justify-between selection:bg-[var(--accent)]/30 selection:text-[var(--accent)] transition-all duration-300">
       
+      {/* Immersive First-Time User Onboarding Guide Tour */}
+      <OnboardingTour 
+        activePage={activePage}
+        setActivePage={setActivePage}
+        customizerOpen={customizerOpen}
+        setCustomizerOpen={setCustomizerOpen}
+        setTheme={setTheme}
+      />
+
+      {/* Smooth Scroll Progress Indicator Bar */}
+      <div 
+        className="fixed top-0 left-0 h-1 bg-[var(--accent)] z-[100] transition-all duration-75 ease-out shadow-sm shadow-[var(--accent)]/50"
+        style={{ width: `${scrollProgress}%` }}
+        id="scroll-progress-bar"
+      />
+
       {/* Dynamic Style Injection representing the live color palette options */}
       <style>{`
         :root {
@@ -892,6 +1013,22 @@ export default function App() {
                     </div>
                   )}
 
+                  {/* Replay Onboarding Guide Option */}
+                  <div className="mt-4 border-t border-[var(--border)] pt-3 text-center">
+                    <button
+                      onClick={() => {
+                        setCustomizerOpen(false);
+                        if ((window as any).triggerVortexTour) {
+                          (window as any).triggerVortexTour();
+                        }
+                      }}
+                      className="inline-flex w-full items-center justify-center gap-1.5 text-[10px] font-mono font-black uppercase text-[var(--accent)] hover:opacity-85 cursor-pointer bg-[var(--bg-primary)] border border-[var(--border)] px-4 py-2.5 rounded-lg shadow-sm"
+                    >
+                      <RefreshCw className="h-3 w-3 animate-spin-slow" />
+                      <span>Replay Interactive Tour</span>
+                    </button>
+                  </div>
+
                 </div>
               )}
             </div>
@@ -929,7 +1066,7 @@ export default function App() {
       </nav>
 
       {/* Main Pages Switcher */}
-      <main className="flex-grow bg-[var(--bg-primary)]">
+      <main key={activePage} className="flex-grow bg-[var(--bg-primary)] animate-fadeIn">
         
         {/* Render HOME segment */}
         {activePage === 'home' && (
@@ -1027,17 +1164,39 @@ export default function App() {
             {/* Students Section */}
             <div className="flex flex-col gap-8">
               {/* Header section with department title */}
-              <div className="border-b border-[var(--border)] pb-6 text-left">
-                <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">The Crew</span>
-                <h2 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)]">Meet Team Vortex</h2>
-                <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl">
-                  A community of high school builders, software developers, and outreach leaders custom manufacturing robotics for FTC competition.
-                </p>
+              <div className="border-b border-[var(--border)] pb-6 text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                  <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">The Crew</span>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)]">Meet Team Vortex</h2>
+                  <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl">
+                    A community of high school builders, software developers, and outreach leaders custom manufacturing robotics for FTC competition.
+                  </p>
+                </div>
+                
+                {/* Department Filter Controls */}
+                <div className="flex flex-wrap gap-2 shrink-0 py-1" id="team-department-filter-controls">
+                  {(['All', 'Mechanical', 'Software', 'Design & Outreach'] as const).map((dept) => (
+                    <button
+                      key={dept}
+                      onClick={() => setTeamFilter(dept)}
+                      className={`px-3.5 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all duration-200 cursor-pointer border ${
+                        teamFilter === dept
+                          ? 'bg-[var(--accent)] text-[var(--btn-text)] border-[var(--accent)] shadow-md shadow-[var(--accent)]/20'
+                          : 'bg-[var(--card-bg)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)]'
+                      }`}
+                    >
+                      {dept}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Grid of multiple people */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {teamMembers.filter(member => member.department !== 'Mentors').map((member) => {
+                {teamMembers
+                  .filter(member => member.department !== 'Mentors')
+                  .filter(member => teamFilter === 'All' || member.department === teamFilter)
+                  .map((member) => {
                   const placeholderPhoto = portraits[member.id] || `https://picsum.photos/seed/${member.name}/600/450`;
                   return (
                     <div 
@@ -1368,11 +1527,31 @@ export default function App() {
               <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl leading-relaxed">
                 Configure your pathing architectures, bezier spline controllers, and coordinates of Vortex. Complete with 10 customizable resource decks.
               </p>
+
+              {/* Dynamic Live Resource Search Box */}
+              <div className="relative w-full max-w-md mt-6" id="resources-dynamic-search-box">
+                <input
+                  type="text"
+                  placeholder="Search assets, guides, or files... (e.g. CAD, Pedro, PID)"
+                  value={resourceSearch}
+                  onChange={(e) => setResourceSearch(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition duration-150 pr-10"
+                />
+                {resourceSearch ? (
+                  <button 
+                    onClick={() => setResourceSearch('')}
+                    className="absolute right-3 top-2.5 text-[10px] font-black tracking-wider uppercase text-[var(--accent)] hover:text-[var(--text-primary)] cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                ) : (
+                  <Compass className="absolute right-3.5 top-3 h-4 w-4 text-[var(--text-secondary)] animate-spin-slow pointer-events-none" />
+                )}
+              </div>
             </div>
 
-            {/* Grid of 10 Dummy Resource placeholders styled with live theme variables */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {[
+            {(() => {
+              const pedroPathingItems = [
                 { id: 1, name: 'Pedro Pathing Setup', desc: 'Core library installation script to drive Mecanum drivetrains with sub-millimeter trajectory accuracy.' },
                 { id: 2, name: 'Polynomial Integrator', desc: 'Mathematical solver to calibrate bezier curves and acceleration profile coefficients.' },
                 { id: 3, name: 'Bezier Curve Plottings', desc: 'Virtual coordinate plot scripts to simulate path curves directly on high-performance canvases.' },
@@ -1383,66 +1562,110 @@ export default function App() {
                 { id: 8, name: 'Error Tolerance Modifier', desc: 'Adaptive feedback correction bounds to trigger dynamic replanning during high speed crashes.' },
                 { id: 9, name: 'Telemetry Log Dump', desc: 'Store local debugging coordinate arrays directly within the REV Control Hub flash modules.' },
                 { id: 10, name: 'Sensor Fusion Matrix', desc: 'Incorporate Pinpoint hub encoders together with modern IMU gyroscopes for angle correction.' }
-              ].map((dummy) => (
-                <div 
-                  key={dummy.id}
-                  className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left"
-                >
-                  <div className="h-10 w-10 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-colors shrink-0">
-                    <Compass className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{dummy.name}</h4>
-                    <p className="text-xs text-[var(--text-secondary)] mt-1 pr-1 leading-relaxed">{dummy.desc}</p>
-                  </div>
-                  <div className="mt-auto pt-2 flex items-center text-[10px] font-bold text-[var(--text-secondary)] hover:text-[var(--accent)] cursor-pointer">
-                    <span>EDIT PATH LINK</span>
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </div>
-                </div>
-              ))}
-            </div>
+              ];
 
-            {/* Our Resources Subsection with exactly 5 custom helper cards */}
-            <div className="border-t border-[var(--border)] pt-12 flex flex-col gap-6">
-              <div className="text-left">
-                <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Shared Assets</span>
-                <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase">Our Resources</h3>
-                <p className="text-xs text-[var(--text-secondary)] mt-1">
-                  Download engineering booklets, presentation templates, and custom driver configs developed by Team Vortex.
-                </p>
-              </div>
+              const sharedAssetsItems = [
+                { name: 'OnShape CAD Workspace', icon: Box, desc: 'Complete 3D CAD modeling file directory of the Vortex competition robot. Open-source workspace.' },
+                { name: 'Engineering Portfolio PDF', icon: BookOpen, desc: 'The verified portfolio notebook document submitted during regional Inspire Award design reviews.' },
+                { name: 'Driver Station Config File', icon: Terminal, desc: 'Telemetry dashboard layouts, button mapping parameters, and gamepad profiles for rapid operator execution.' },
+                { name: 'Community Outreach Slide Deck', icon: Users, desc: 'Outreach workshop slides, robotics demo booklets, and safety sheets prepared for middle school STEM labs.' },
+                { name: 'Sponsorship Pitch Toolkit', icon: Handshake, desc: 'The official visual presentations shared during business sponsor evaluations showcasing resource budgeting.' }
+              ];
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {[
-                  { name: 'OnShape CAD Workspace', icon: Box, desc: 'Complete 3D CAD modeling file directory of the Vortex competition robot. Open-source workspace.' },
-                  { name: 'Engineering Portfolio PDF', icon: BookOpen, desc: 'The verified portfolio notebook document submitted during regional Inspire Award design reviews.' },
-                  { name: 'Driver Station Config File', icon: Terminal, desc: 'Telemetry dashboard layouts, button mapping parameters, and gamepad profiles for rapid operator execution.' },
-                  { name: 'Community Outreach Slide Deck', icon: Users, desc: 'Outreach workshop slides, robotics demo booklets, and safety sheets prepared for middle school STEM labs.' },
-                  { name: 'Sponsorship Pitch Toolkit', icon: Handshake, desc: 'The official visual presentations shared during business sponsor evaluations showcasing resource budgeting.' }
-                ].map((item, index) => {
-                  const IconComp = item.icon;
-                  return (
-                    <div 
-                      key={index}
-                      className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left"
+              const query = resourceSearch.toLowerCase().trim();
+              const filteredPedro = pedroPathingItems.filter(
+                (item) => item.name.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query)
+              );
+              const filteredShared = sharedAssetsItems.filter(
+                (item) => item.name.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query)
+              );
+
+              const hasNoResults = filteredPedro.length === 0 && filteredShared.length === 0;
+
+              if (hasNoResults) {
+                return (
+                  <div className="py-16 text-center border border-[var(--border)] rounded-2xl bg-[var(--card-bg)] flex flex-col items-center justify-center gap-2 animate-fadeIn">
+                    <Compass className="h-8 w-8 text-[var(--text-secondary)] animate-bounce" />
+                    <h4 className="text-sm font-black uppercase text-[var(--text-primary)] tracking-wider">No matching assets found</h4>
+                    <p className="text-xs text-[var(--text-secondary)] max-w-xs leading-relaxed">
+                      We couldn't locate any files matching <code className="text-[var(--accent)] font-mono">"{resourceSearch}"</code>. Double-check spelling or try terms like "CAD", "Pedro", "PID", or "Slide".
+                    </p>
+                    <button 
+                      onClick={() => setResourceSearch('')}
+                      className="mt-2 text-[10px] font-extrabold uppercase tracking-widest text-[var(--accent)] hover:opacity-85"
                     >
-                      <div className="h-10 w-10 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-colors shrink-0">
-                        <IconComp className="h-5 w-5" />
+                      Reset Query Filter
+                    </button>
+                  </div>
+                );
+              }
+
+              return (
+                <>
+                  {filteredPedro.length > 0 && (
+                    <div className="flex flex-col gap-6 animate-fadeIn">
+                      <div className="text-left border-l-2 border-[var(--accent)] pl-4">
+                        <span className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase">Trajectory Guides</span>
+                        <h3 className="text-lg font-black text-[var(--text-primary)] uppercase">Pedro Math Controllers</h3>
                       </div>
-                      <div>
-                        <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{item.name}</h4>
-                        <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{item.desc}</p>
-                      </div>
-                      <div className="mt-auto pt-2 flex items-center text-[10px] font-bold text-[var(--text-secondary)] hover:text-[var(--accent)] cursor-pointer">
-                        <span>ACCESS DOCUMENT</span>
-                        <ExternalLink className="h-3 w-3 ml-1" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {filteredPedro.map((dummy) => (
+                          <div 
+                            key={dummy.id}
+                            className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left"
+                          >
+                            <div className="h-10 w-10 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-colors shrink-0">
+                              <Compass className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{dummy.name}</h4>
+                              <p className="text-xs text-[var(--text-secondary)] mt-1 pr-1 leading-relaxed">{dummy.desc}</p>
+                            </div>
+                            <div className="mt-auto pt-2 flex items-center text-[10px] font-bold text-[var(--text-secondary)] hover:text-[var(--accent)] cursor-pointer">
+                              <span>EDIT PATH LINK</span>
+                              <ExternalLink className="h-3 w-3 ml-1" />
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  )}
+
+                  {filteredShared.length > 0 && (
+                    <div className="border-t border-[var(--border)] pt-12 flex flex-col gap-6 animate-fadeIn">
+                      <div className="text-left border-l-2 border-[var(--accent)] pl-4">
+                        <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Shared Assets</span>
+                        <h3 className="text-lg font-black text-[var(--text-primary)] uppercase">Our Resources</h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {filteredShared.map((item, index) => {
+                          const IconComp = item.icon;
+                          return (
+                            <div 
+                              key={index}
+                              className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left"
+                            >
+                              <div className="h-10 w-10 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-colors shrink-0">
+                                <IconComp className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{item.name}</h4>
+                                <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{item.desc}</p>
+                              </div>
+                              <div className="mt-auto pt-2 flex items-center text-[10px] font-bold text-[var(--text-secondary)] hover:text-[var(--accent)] cursor-pointer">
+                                <span>ACCESS DOCUMENT</span>
+                                <ExternalLink className="h-3 w-3 ml-1" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
           </div>
         )}
@@ -1451,7 +1674,14 @@ export default function App() {
         {activePage === 'contact' && (
           <div className="mx-auto max-w-3xl px-6 py-24 min-h-[400px]" id="contact-page-view">
             <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-8 max-w-xl mx-auto shadow-xl text-left">
-              <span className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase block">Inquire</span>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase block">Inquire</span>
+                {isDraftAutosaved && (
+                  <span className="text-[10px] font-mono tracking-wider text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-md animate-pulse">
+                     Draft Autosaved
+                  </span>
+                )}
+              </div>
               <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase mt-1">Get In Touch</h3>
               <p className="text-xs text-[var(--text-secondary)] mt-2 mb-6">
                 Are you a local business owner looking to sponsor, a school wishing for safety demonstrations, or a student wanting to join Vortex? Drop our captain a line!
@@ -1548,6 +1778,138 @@ export default function App() {
                 </div>
               </form>
             </div>
+
+            {/* Elegant FAQ Section below the contact form */}
+            <div className="mt-16 border-t border-[var(--border)] pt-12 max-w-xl mx-auto" id="contact-faq-section">
+              <div className="text-center mb-8">
+                <span className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase block">FAQ</span>
+                <h4 className="text-xl font-black text-[var(--text-primary)] uppercase mt-1">Frequently Asked Questions</h4>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
+                  Got questions about joining Vortex or supporting our team? Here are quick answers to our most common inquiries.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {[
+                  {
+                    q: "How can I join Team Vortex?",
+                    a: "We welcome Texas high school students who are passionate about design, math, programming, mechanical builds, and outreach. No prior robotics experience is required—our mentors train all recruit members from scratch!",
+                    icon: Users,
+                    color: "text-sky-400"
+                  },
+                  {
+                    q: "What is the expected time commitment?",
+                    a: "The regular build season begins with kickoff in September. Expect 4-6 hours per week of team meetings, computer modeling, and robot testing, with increased sprint hours before Texas qualifier competitions.",
+                    icon: Clock,
+                    color: "text-amber-400"
+                  },
+                  {
+                    q: "Where can I find meeting minutes?",
+                    a: "All of our weekly meeting engineering logs, sprint design updates, and software progress journals are fully documented. You can easily view, search, and download them through the public shared folder linked inside our Resources page.",
+                    icon: FileText,
+                    color: "text-indigo-400"
+                  },
+                  {
+                    q: "Why should we sponsor Team Vortex?",
+                    a: "Sponsoring Vortex directly funds engineering parts, CNC routing, and Texas competition registrations. Your company logo will be proudly displayed on our official robot chassis, team attire, website, and promotional banners.",
+                    icon: Handshake,
+                    color: "text-emerald-400"
+                  },
+                  {
+                    q: "How are sponsorship donations utilized?",
+                    a: "100% of commercial funds go directly into robot hardware, custom manufacturing raw materials, programming control hubs, safety gear, and event entry registrations.",
+                    icon: Wrench,
+                    color: "text-teal-400"
+                  },
+                  {
+                    q: "How do I request a demo for my school?",
+                    a: "We love performing robot showcases and doing STEM workshops! Simply submit a school request message using our contact form above, and our high-school student outreach captains will coordinate with you to bring our demo field equipment directly to your school.",
+                    icon: School,
+                    color: "text-rose-400"
+                  },
+                  {
+                    q: "Are there hands-on training safety guidelines?",
+                    a: "Safety is our first priority. Every member undergoes strict machine safety certification drills. Hand tools, 3D printers, and CNC systems are only operated under direct, trained supervision in compliance with Texas FTC regulations.",
+                    icon: Shield,
+                    color: "text-red-400"
+                  }
+                ].map((item, idx) => {
+                  const isOpen = openFaqIndex === idx;
+                  const IconComponent = item.icon;
+                  return (
+                    <div 
+                      key={idx}
+                      className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl overflow-hidden transition-all duration-200"
+                      id={`faq-item-${idx}`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                        className="w-full text-left p-4 flex items-center justify-between gap-4 font-sans text-xs font-black text-[var(--text-primary)] uppercase tracking-wider hover:text-[var(--accent)] transition duration-150 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <IconComponent className={`w-4 h-4 shrink-0 transition-all duration-200 ${item.color}`} />
+                          <span>{item.q}</span>
+                        </div>
+                        <ChevronRight className={`w-4 h-4 text-[var(--text-secondary)] shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-90 text-[var(--accent)]' : ''}`} />
+                      </button>
+                      
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ 
+                              height: "auto", 
+                              opacity: 1,
+                              transition: {
+                                height: {
+                                  type: "spring",
+                                  stiffness: 300,
+                                  damping: 26,
+                                  restDelta: 0.01
+                                },
+                                opacity: {
+                                  duration: 0.25,
+                                  ease: "easeOut"
+                                }
+                              }
+                            }}
+                            exit={{ 
+                              height: 0, 
+                              opacity: 0,
+                              transition: {
+                                height: {
+                                  type: "spring",
+                                  stiffness: 300,
+                                  damping: 26,
+                                  restDelta: 0.01
+                                },
+                                opacity: {
+                                  duration: 0.15,
+                                  ease: "easeIn"
+                                }
+                              }
+                            }}
+                            className="overflow-hidden border-t border-[var(--border)] bg-[var(--bg-primary)]/30"
+                          >
+                            <motion.p 
+                              initial={{ y: -8, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              exit={{ y: -8, opacity: 0 }}
+                              transition={{ duration: 0.2, ease: "easeOut" }}
+                              className="p-4 text-xs leading-relaxed text-[var(--text-secondary)]"
+                            >
+                              {item.a}
+                            </motion.p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -1635,7 +1997,7 @@ export default function App() {
             </p>
 
             {/* Social circular hovering links */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3" id="vortex-footer-socials">
               {[
                 { name: 'Spotify Playlist Tracker', href: 'https://open.spotify.com', outlineColor: 'hover:border-green-500/30 text-green-400', path: "M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.377-1.454-5.37-1.783-8.893-.982-.336.075-.668-.135-.745-.47-.077-.337.135-.668.47-.745 3.856-.88 7.15-.51 9.812 1.12.296.18.387.563.207.857zm1.226-2.724c-.226.367-.71.486-1.077.26-2.72-1.672-6.87-2.155-10.076-1.182-.412.125-.845-.107-.97-.52-.125-.412.107-.845.52-.97 3.666-1.112 8.232-.577 11.343 1.336.368.226.486.71.26 1.076zm.105-2.81c-3.262-1.937-8.644-2.115-11.758-1.17-.5.152-1.025-.133-1.177-.633-.15-.5.133-1.025.633-1.177 3.59-1.09 9.53-.883 13.292 1.35.454.27.604.856.335 1.31-.27.454-.856.604-1.31.335z" },
                 { name: 'YouTube Guides', href: 'https://youtube.com', outlineColor: 'hover:border-red-500/30 text-red-500', path: "M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.52 3.545 12 3.545 12 3.545s-7.52 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11C4.48 20.455 12 20.455 12 20.455s7.52 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" },
@@ -1662,6 +2024,17 @@ export default function App() {
 
         </div>
       </footer>
+
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 p-3 rounded-full bg-[var(--accent)] text-[var(--btn-text)] shadow-lg hover:brightness-110 active:scale-95 transition-all duration-300 z-50 cursor-pointer border border-[var(--accent)]/40 flex items-center justify-center animate-fadeIn hover-pulse"
+          id="scroll-to-top-btn"
+          aria-label="Scroll to top"
+        >
+          <ChevronUp className="w-5 h-5" />
+        </button>
+      )}
 
     </div>
   );
