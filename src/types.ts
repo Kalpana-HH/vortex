@@ -19,7 +19,7 @@ export interface TeamMember {
   id: string;
   name: string;
   role: string;
-  department: 'Mechanical' | 'Software' | 'Design & Outreach' | 'Mentors';
+  department: 'Mechanical' | 'Software' | 'Design & Outreach' | 'Mentors' | 'All-Rounder';
   bio: string;
   favTool: string;
   favComponent: string;

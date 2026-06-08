@@ -20,12 +20,62 @@
         }
       },
       "required": ["selector", "text", "updatedAt"]
+    },
+    "imageReplacement": {
+      "title": "Image Replacement",
+      "description": "A universal image replacement mapped by CSS selectors, supporting drop-to-replace assets",
+      "type": "object",
+      "properties": {
+        "selector": {
+          "type": "string",
+          "description": "The unique absolute CSS selector of the img node"
+        },
+        "src": {
+          "type": "string",
+          "description": "Base64 or external url of the custom replacement image"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the update"
+        }
+      },
+      "required": ["selector", "src", "updatedAt"]
+    },
+    "linkReplacement": {
+      "title": "Link Replacement",
+      "description": "A universal anchor link (href) replacement mapped by CSS selectors",
+      "type": "object",
+      "properties": {
+        "selector": {
+          "type": "string",
+          "description": "The unique absolute CSS selector of the anchor tag"
+        },
+        "href": {
+          "type": "string",
+          "description": "The custom hyperlink destination address"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the update"
+        }
+      },
+      "required": ["selector", "href", "updatedAt"]
     }
   },
   "firestore": {
     "text_replacements/{replacementId}": {
       "schema": "textReplacement",
       "description": "Universal text replacements for site-wide edits"
+    },
+    "image_replacements/{replacementId}": {
+      "schema": "imageReplacement",
+      "description": "Universal image replacements for site-wide drag-n-drop edits"
+    },
+    "link_replacements/{replacementId}": {
+      "schema": "linkReplacement",
+      "description": "Universal hyperlink targets for site-wide editable paths"
     }
   }
 }

@@ -23,5 +23,41 @@ service cloud.firestore {
                      (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
                       request.auth.token.email == "hraha0311@gmail.com");
     }
+
+    // Universal Image Replacements collection (drag-and-drop replacement)
+    match /image_replacements/{replacementId} {
+      allow read: if true; // Publicly accessible so images are synchronized universially
+      
+      allow create, update: if request.auth != null && 
+                     request.auth.token.email_verified == true && 
+                     (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
+                      request.auth.token.email == "hraha0311@gmail.com") &&
+                     request.resource.data.updatedAt == request.time &&
+                     request.resource.data.selector is string &&
+                     request.resource.data.src is string;
+                     
+      allow delete: if request.auth != null && 
+                     request.auth.token.email_verified == true && 
+                     (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
+                      request.auth.token.email == "hraha0311@gmail.com");
+    }
+
+    // Universal Link Replacements collection
+    match /link_replacements/{replacementId} {
+      allow read: if true; // Publicly accessible so hyperlinks are synchronized universally
+      
+      allow create, update: if request.auth != null && 
+                     request.auth.token.email_verified == true && 
+                     (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
+                      request.auth.token.email == "hraha0311@gmail.com") &&
+                     request.resource.data.updatedAt == request.time &&
+                     request.resource.data.selector is string &&
+                     request.resource.data.href is string;
+                     
+      allow delete: if request.auth != null && 
+                     request.auth.token.email_verified == true && 
+                     (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
+                      request.auth.token.email == "hraha0311@gmail.com");
+    }
   }
 }

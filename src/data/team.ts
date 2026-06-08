@@ -5,7 +5,7 @@ export const teamMembers: TeamMember[] = [
     id: '1',
     name: 'Alex Rivera',
     role: 'Team Captain & Lead Hardware Designer',
-    department: 'Mechanical',
+    department: 'All-Rounder',
     bio: 'Alex handles CAD development and final physical assembly. He spends too much time adjusting belt tensions and finding missing 10-32 screws.',
     favTool: 'Dewalt Cordless Band Saw',
     favComponent: 'goBILDA Viper Slide Kit',
