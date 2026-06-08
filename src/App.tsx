@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { teamMembers } from './data/team';
-import OnboardingTour from './components/OnboardingTour';
+import BOMManager from './components/BOMManager';
+import COMCalculator from './components/COMCalculator';
 
 const vortexLogo = '/assets/images/vortex_logo.png';
 const vortexLongLogo = '/assets/images/Vortex_long.png';
@@ -42,7 +43,7 @@ const ImageWithFallback = ({ src, alt, className, ...props }: React.ImgHTMLAttri
   );
 };
 
-type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery';
+type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery' | 'bom' | 'com-calc';
 
 interface PageItem {
   id: PageID;
@@ -369,6 +370,15 @@ export default function App() {
   // New Features: Team Filter and Resource Search States
   const [teamFilter, setTeamFilter] = useState<'All' | 'Mechanical' | 'Software' | 'Design & Outreach'>('All');
   const [resourceSearch, setResourceSearch] = useState('');
+  const [activeResourceDetail, setActiveResourceDetail] = useState<{
+    name: string;
+    desc: string;
+    icon: any;
+    details?: string;
+    isTool?: boolean;
+    target?: string;
+    cta?: string;
+  } | null>(null);
 
   // Auto-save contact form drafts
   useEffect(() => {
@@ -726,15 +736,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans flex flex-col justify-between selection:bg-[var(--accent)]/30 selection:text-[var(--accent)] transition-all duration-300">
       
-      {/* Immersive First-Time User Onboarding Guide Tour */}
-      <OnboardingTour 
-        activePage={activePage}
-        setActivePage={setActivePage}
-        customizerOpen={customizerOpen}
-        setCustomizerOpen={setCustomizerOpen}
-        setTheme={setTheme}
-      />
-
       {/* Smooth Scroll Progress Indicator Bar */}
       <div 
         className="fixed top-0 left-0 h-1 bg-[var(--accent)] z-[100] transition-all duration-75 ease-out shadow-sm shadow-[var(--accent)]/50"
@@ -1549,27 +1550,154 @@ export default function App() {
                 )}
               </div>
             </div>
-
-            {(() => {
+                {(() => {
               const pedroPathingItems = [
-                { id: 1, name: 'Pedro Pathing Setup', desc: 'Core library installation script to drive Mecanum drivetrains with sub-millimeter trajectory accuracy.' },
-                { id: 2, name: 'Polynomial Integrator', desc: 'Mathematical solver to calibrate bezier curves and acceleration profile coefficients.' },
-                { id: 3, name: 'Bezier Curve Plottings', desc: 'Virtual coordinate plot scripts to simulate path curves directly on high-performance canvases.' },
-                { id: 4, name: 'Odometry Wheel Calibration', desc: 'Adjust dead-wheel encoder ticks per revolution to assure absolute real-time positioning feedback.' },
-                { id: 5, name: 'Linear Velocity Controller', desc: 'PID feedforward tuning configurations to control acceleration steps during auto cycles.' },
-                { id: 6, name: 'Tangent Angle Matrices', desc: 'Verify tangent vectors when driving backwards during intricate cone intake cycles.' },
-                { id: 7, name: 'Braking Distance Optimizer', desc: 'Configure motor voltage braking routines to stop precisely in front of high-junction grids.' },
-                { id: 8, name: 'Error Tolerance Modifier', desc: 'Adaptive feedback correction bounds to trigger dynamic replanning during high speed crashes.' },
-                { id: 9, name: 'Telemetry Log Dump', desc: 'Store local debugging coordinate arrays directly within the REV Control Hub flash modules.' },
-                { id: 10, name: 'Sensor Fusion Matrix', desc: 'Incorporate Pinpoint hub encoders together with modern IMU gyroscopes for angle correction.' }
+                { 
+                  id: 1, 
+                  name: 'Pedro Pathing Setup', 
+                  desc: 'Core library installation script to drive Mecanum drivetrains with sub-millimeter trajectory accuracy.',
+                  details: 'Setup requires importing the `pedropathing` library in Android Studio. The primary class `Follower` controls coordinate kinematics.\n\nInitialize using:\nfollower = new Follower(hardwareMap);\n\nDefine linear coefficients inside your robot configuration files to synchronize odometry track widths.',
+                  icon: Compass,
+                  cta: 'GO TO CODE GITHUB'
+                },
+                { 
+                  id: 2, 
+                  name: 'Polynomial Integrator', 
+                  desc: 'Mathematical solver to calibrate bezier curves and acceleration profile coefficients.',
+                  details: 'Vortex integrates a custom 5th-order polynomial solver. It minimizes total kinematic jerk along curvilinear coordinates s(t), assuring smooth, fast traction transitions during intake maneuvers.',
+                  icon: Compass,
+                  cta: 'VIEW MATH SOLVER'
+                },
+                { 
+                  id: 3, 
+                  name: 'Bezier Curve Plottings', 
+                  desc: 'Virtual coordinate plot scripts to simulate path curves directly on high-performance canvases.',
+                  details: 'Paths are defined as composite parametric Bezier curves of the form:\nB(t) = Sum_{i=0}^n C(n, i) * (1-t)^{n-i} * t^i * P_i\n\nUse our interactive plot simulator to visualize path spline transitions before deployment on the real robot.',
+                  icon: Compass,
+                  cta: 'SIMULATE PATHS'
+                },
+                { 
+                  id: 4, 
+                  name: 'Odometry Wheel Calibration', 
+                  desc: 'Adjust dead-wheel encoder ticks per revolution to assure absolute real-time positioning feedback.',
+                  details: 'Track width is calibrated via concentric rotations, adjusting horizontal and vertical encoder matrices.\n\nCalibrate using standard formula:\nDelta_Theta = (Delta_Right_Encoder - Delta_Left_Encoder) / Track_Width',
+                  icon: Compass,
+                  cta: 'CALIBRATION DOC'
+                },
+                { 
+                  id: 5, 
+                  name: 'Linear Velocity Controller', 
+                  desc: 'PID feedforward tuning configurations to control acceleration steps during auto cycles.',
+                  details: 'Combines closed-loop PID error feedback with theoretical voltage feedforward (Kv, Ks, Ka). Keeps movement deviation strictly within +/- 0.25 inches during intense gameplay.',
+                  icon: Compass,
+                  cta: 'VIEW PID GRAPHS'
+                },
+                { 
+                  id: 6, 
+                  name: 'Tangent Angle Matrices', 
+                  desc: 'Verify tangent vectors when driving backwards during intricate cone intake cycles.',
+                  details: 'Calculates the dynamic rotational heading Theta aligning exactly with the path\'s instantaneous tangent vector:\n\nTheta = arctan2(y\'(t), x\'(t))',
+                  icon: Compass,
+                  cta: 'SOLVER SHEET'
+                },
+                { 
+                  id: 7, 
+                  name: 'Braking Distance Optimizer', 
+                  desc: 'Configure motor voltage braking routines to stop precisely in front of high-junction grids.',
+                  details: 'Determines ideal deceleration triggers based on immediate distance remaining, actively stopping the robot weight within 15 milliseconds of reaching target layout.',
+                  icon: Compass,
+                  cta: 'OPTIMIZER TESTER'
+                },
+                { 
+                  id: 8, 
+                  name: 'Error Tolerance Modifier', 
+                  desc: 'Adaptive feedback correction bounds to trigger dynamic replanning during high speed crashes.',
+                  details: 'Triggers dynamic local spline replanning if the translation error gets larger than 2.0 inches, bypassing physical chassis collisions with opponent robots.',
+                  icon: Compass,
+                  cta: 'TRIGGER MODIFIERS'
+                },
+                { 
+                  id: 9, 
+                  name: 'Telemetry Log Dump', 
+                  desc: 'Store local debugging coordinate arrays directly within the REV Control Hub flash modules.',
+                  details: 'Logs timestamps (t), actual coordinates (x, y, Theta), target coordinates, loop-time frequencies (Hz), and battery voltage directly to local CSV arrays for playback.',
+                  icon: Compass,
+                  cta: 'DUMP LOG DATA'
+                },
+                { 
+                  id: 10, 
+                  name: 'Sensor Fusion Matrix', 
+                  desc: 'Incorporate Pinpoint hub encoders together with modern IMU gyroscopes for angle correction.',
+                  details: 'Fuses high-frequency hardware odometry trackers together with the internal Bosch IMU gyroscopes using a complementary velocity filter, completely eliminating rotational drift.',
+                  icon: Compass,
+                  cta: 'FUSION ANALYSIS'
+                }
               ];
 
               const sharedAssetsItems = [
-                { name: 'OnShape CAD Workspace', icon: Box, desc: 'Complete 3D CAD modeling file directory of the Vortex competition robot. Open-source workspace.' },
-                { name: 'Engineering Portfolio PDF', icon: BookOpen, desc: 'The verified portfolio notebook document submitted during regional Inspire Award design reviews.' },
-                { name: 'Driver Station Config File', icon: Terminal, desc: 'Telemetry dashboard layouts, button mapping parameters, and gamepad profiles for rapid operator execution.' },
-                { name: 'Community Outreach Slide Deck', icon: Users, desc: 'Outreach workshop slides, robotics demo booklets, and safety sheets prepared for middle school STEM labs.' },
-                { name: 'Sponsorship Pitch Toolkit', icon: Handshake, desc: 'The official visual presentations shared during business sponsor evaluations showcasing resource budgeting.' }
+                { 
+                  name: 'Dynamic Team Budget & BOM Planner', 
+                  icon: Wrench, 
+                  desc: 'Interactive parts and ledger manager. Budget structural assemblies, aluminum structures, electronics, and weights in real-time.',
+                  isTool: true,
+                  target: 'bom',
+                  cta: 'LAUNCH PLANNER',
+                  details: 'Vortex direct online Bill of Materials planner utility. Real-time cost, weight calculations, custom suppliers, priority matrices, and threshold indicators.'
+                },
+                { 
+                  name: 'Center of Mass Coordinator Tool', 
+                  icon: Cpu, 
+                  desc: 'Simulate structural load points on an 18" virtual FTC-sizing bounding mesh in 3D. Predict center-of-gravity elevations.',
+                  isTool: true,
+                  target: 'com-calc',
+                  cta: 'LAUNCH CALCULATOR',
+                  details: 'Calculates overall structural centroid gravity values including height boundaries. Identifies active tipping and corner load risk metrics with a vector matrix plot.'
+                },
+                { 
+                  name: 'OnShape CAD Workspace', 
+                  icon: Box, 
+                  desc: 'Complete 3D CAD modeling archive of the Vortex competition robot. Access open-source robot models, drive pods, and assemblies.',
+                  isTool: false,
+                  target: 'https://cad.onshape.com',
+                  cta: 'OPEN WORKSPACE',
+                  details: 'Our OnShape workspace contains the full parametric assemblies for the custom Mecanum chassis frame, cascading elevators, active claws, and electronics bracketry. Useful for inspecting material volumes.'
+                },
+                { 
+                  name: 'Engineering Portfolio PDF', 
+                  icon: BookOpen, 
+                  desc: 'The verified portfolio notebook document submitted during regional Inspire Award design reviews.',
+                  isTool: false,
+                  target: '#portfolio',
+                  cta: 'LOAD DOCUMENT',
+                  details: 'This document presents the detailed design cycle of the Vortex drivetrain, our software flowcharts containing Pedro Pathing algorithms, autonomous splines, outreach events logging, and our total financial ledger.'
+                },
+                { 
+                  name: 'Driver Station Config File', 
+                  icon: Terminal, 
+                  desc: 'Telemetry dashboard layouts, button mapping parameters, and gamepad profiles for rapid operator execution.',
+                  isTool: false,
+                  target: '#station-config',
+                  cta: 'DOWNLOAD CONFIG',
+                  details: 'Pre-configured configuration file containing Driver Station button bindings, and dashboard layouts to map control of lifts, clamps, and intake pods across dual gamepads.'
+                },
+                { 
+                  name: 'Community Outreach Slide Deck', 
+                  icon: Users, 
+                  desc: 'Outreach workshop slides, robotics demo booklets, and safety sheets prepared for middle school STEM labs.',
+                  isTool: false,
+                  target: '#outreach',
+                  cta: 'OPEN SLIDE DECK',
+                  details: 'Visual slides used by Team Vortex during local school outreach campaigns to demystify FTC engineering processes, programming structures, and invite new members.'
+                },
+                { 
+                  name: 'Sponsorship Pitch Toolkit', 
+                  icon: Handshake, 
+                  desc: 'The official visual presentations shared during business sponsor evaluations showcasing resource budgeting.',
+                  isTool: false,
+                  target: '#sponsorship',
+                  cta: 'LOAD TOOLKIT',
+                  details: 'Our sponsorship pitch presentation detailing the team seasonal budget, visual milestones, technical challenges, and community exposure opportunities.'
+                }
               ];
 
               const query = resourceSearch.toLowerCase().trim();
@@ -1588,7 +1716,7 @@ export default function App() {
                     <Compass className="h-8 w-8 text-[var(--text-secondary)] animate-bounce" />
                     <h4 className="text-sm font-black uppercase text-[var(--text-primary)] tracking-wider">No matching assets found</h4>
                     <p className="text-xs text-[var(--text-secondary)] max-w-xs leading-relaxed">
-                      We couldn't locate any files matching <code className="text-[var(--accent)] font-mono">"{resourceSearch}"</code>. Double-check spelling or try terms like "CAD", "Pedro", "PID", or "Slide".
+                      We couldn\'t locate any files matching <code className="text-[var(--accent)] font-mono">"{resourceSearch}"</code>. Double-check spelling or try terms like "BOM", "CAD", "Pedro", "PID", or "Slide".
                     </p>
                     <button 
                       onClick={() => setResourceSearch('')}
@@ -1602,37 +1730,8 @@ export default function App() {
 
               return (
                 <>
-                  {filteredPedro.length > 0 && (
-                    <div className="flex flex-col gap-6 animate-fadeIn">
-                      <div className="text-left border-l-2 border-[var(--accent)] pl-4">
-                        <span className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase">Trajectory Guides</span>
-                        <h3 className="text-lg font-black text-[var(--text-primary)] uppercase">Pedro Math Controllers</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {filteredPedro.map((dummy) => (
-                          <div 
-                            key={dummy.id}
-                            className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left"
-                          >
-                            <div className="h-10 w-10 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-colors shrink-0">
-                              <Compass className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{dummy.name}</h4>
-                              <p className="text-xs text-[var(--text-secondary)] mt-1 pr-1 leading-relaxed">{dummy.desc}</p>
-                            </div>
-                            <div className="mt-auto pt-2 flex items-center text-[10px] font-bold text-[var(--text-secondary)] hover:text-[var(--accent)] cursor-pointer">
-                              <span>EDIT PATH LINK</span>
-                              <ExternalLink className="h-3 w-3 ml-1" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   {filteredShared.length > 0 && (
-                    <div className="border-t border-[var(--border)] pt-12 flex flex-col gap-6 animate-fadeIn">
+                    <div className="flex flex-col gap-6 animate-fadeIn">
                       <div className="text-left border-l-2 border-[var(--accent)] pl-4">
                         <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Shared Assets</span>
                         <h3 className="text-lg font-black text-[var(--text-primary)] uppercase">Our Resources</h3>
@@ -1641,20 +1740,51 @@ export default function App() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {filteredShared.map((item, index) => {
                           const IconComp = item.icon;
+                          const isSpecialTool = item.isTool;
                           return (
                             <div 
                               key={index}
-                              className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left"
+                              onClick={() => {
+                                if (isSpecialTool && item.target) {
+                                  navigateTo(item.target as any);
+                                } else {
+                                  setActiveResourceDetail({
+                                    name: item.name,
+                                    desc: item.desc,
+                                    icon: item.icon,
+                                    details: item.details,
+                                    isTool: item.isTool,
+                                    target: item.target,
+                                    cta: item.cta
+                                  });
+                                }
+                              }}
+                              className={`bg-[var(--card-bg)] border rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 text-left cursor-pointer ${
+                                isSpecialTool 
+                                  ? 'border-[var(--accent)]/40 shadow-[0_0_20px_rgba(0,240,255,0.05)] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(0,240,255,0.12)]'
+                                  : 'border-[var(--border)] hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)]'
+                              }`}
                             >
-                              <div className="h-10 w-10 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-colors shrink-0">
-                                <IconComp className="h-5 w-5" />
+                              <div className="flex items-center justify-between">
+                                <div className={`h-10 w-10 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
+                                  isSpecialTool 
+                                    ? 'bg-[var(--accent)]/15 border-[var(--accent)]/30 text-[var(--accent)]' 
+                                    : 'bg-[var(--bg-primary)] border-[var(--border)] text-[var(--text-secondary)]'
+                                }`}>
+                                  <IconComp className="h-5 w-5" />
+                                </div>
+                                {isSpecialTool && (
+                                  <span className="text-[8px] font-mono font-bold tracking-widest text-[var(--accent)] bg-[var(--accent)]/12 border border-[var(--accent)]/30 px-2 py-0.5 rounded-md uppercase">
+                                    Interactive
+                                  </span>
+                                )}
                               </div>
                               <div>
                                 <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{item.name}</h4>
                                 <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{item.desc}</p>
                               </div>
-                              <div className="mt-auto pt-2 flex items-center text-[10px] font-bold text-[var(--text-secondary)] hover:text-[var(--accent)] cursor-pointer">
-                                <span>ACCESS DOCUMENT</span>
+                              <div className="mt-auto pt-2 flex items-center text-[10px] font-bold text-[var(--accent)] hover:underline">
+                                <span>{item.cta}</span>
                                 <ExternalLink className="h-3 w-3 ml-1" />
                               </div>
                             </div>
@@ -1663,11 +1793,146 @@ export default function App() {
                       </div>
                     </div>
                   )}
+
+                  {filteredPedro.length > 0 && (
+                    <div className="border-t border-[var(--border)] pt-12 flex flex-col gap-6 animate-fadeIn">
+                      <div className="text-left border-l-2 border-[var(--accent)] pl-4">
+                        <span className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase">Trajectory Guides</span>
+                        <h3 className="text-lg font-black text-[var(--text-primary)] uppercase">Pedro Math Controllers</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {filteredPedro.map((dummy) => (
+                          <div 
+                            key={dummy.id}
+                            onClick={() => {
+                              setActiveResourceDetail({
+                                name: dummy.name,
+                                desc: dummy.desc,
+                                icon: Compass,
+                                details: dummy.details,
+                                isTool: false,
+                                target: undefined,
+                                cta: dummy.cta
+                              });
+                            }}
+                            className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left cursor-pointer"
+                          >
+                            <div className="h-10 w-10 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-colors shrink-0">
+                              <Compass className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{dummy.name}</h4>
+                              <p className="text-xs text-[var(--text-secondary)] mt-1 pr-1 leading-relaxed">{dummy.desc}</p>
+                            </div>
+                            <div className="mt-auto pt-2 flex items-center text-[10px] font-bold text-[var(--accent)] hover:underline">
+                              <span>ACCESS DOCUMENT</span>
+                              <ExternalLink className="h-3 w-3 ml-1" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               );
             })()}
 
+            {/* Modal for viewing detailed information about resources */}
+            <AnimatePresence>
+              {activeResourceDetail && (
+                <div 
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                  onClick={() => setActiveResourceDetail(null)}
+                >
+                  <div 
+                    className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] shadow-2xl p-6 text-left"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/30 flex items-center justify-center text-[var(--accent)]">
+                          {React.createElement(activeResourceDetail.icon || Compass, { className: "h-6 w-6 animate-pulse-slow" })}
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-mono tracking-widest text-[var(--accent)] uppercase block">Technical specification</span>
+                          <h3 className="text-sm font-black uppercase tracking-wide text-[var(--text-primary)]">{activeResourceDetail.name}</h3>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setActiveResourceDetail(null)}
+                        className="rounded-lg p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--border)]/30 transition cursor-pointer"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+
+                    <div className="mt-6 flex flex-col gap-4 font-sans text-xs">
+                      <div className="rounded-lg bg-[var(--bg-primary)] border border-[var(--border)]/70 p-3 leading-relaxed text-[var(--text-secondary)]">
+                        {activeResourceDetail.desc}
+                      </div>
+
+                      {activeResourceDetail.details && (
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Implementation details & math model</span>
+                          <div className="rounded-lg bg-[var(--bg-primary)]/80 border border-[var(--border)]/40 p-4 font-mono text-[11px] text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-60 animate-fadeIn">
+                            {activeResourceDetail.details}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-6 flex gap-3 justify-end border-t border-[var(--border)]/40 pt-4">
+                      <button 
+                        onClick={() => setActiveResourceDetail(null)}
+                        className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs font-bold uppercase text-[var(--text-secondary)] hover:bg-[var(--accent)]/5 hover:text-[var(--text-primary)] transition cursor-pointer"
+                      >
+                        Dismiss
+                      </button>
+                      {activeResourceDetail.isTool && activeResourceDetail.target ? (
+                        <button 
+                          onClick={() => {
+                            navigateTo(activeResourceDetail.target! as any);
+                            setActiveResourceDetail(null);
+                          }}
+                          className="rounded-lg bg-[var(--accent)] text-[var(--btn-text)] px-4 py-2 text-xs font-bold uppercase tracking-wider hover:opacity-95 transition cursor-pointer"
+                        >
+                          Launch Applet
+                        </button>
+                      ) : (
+                        <a 
+                          href={activeResourceDetail.target || '#'}
+                          onClick={(e) => {
+                            if (!activeResourceDetail.target || activeResourceDetail.target.startsWith('#')) {
+                              e.preventDefault();
+                              alert('This simulated document belongs to our regional FTC portfolio library. In a live environment, this download link routes directly to local Google Drive assets.');
+                            }
+                            setActiveResourceDetail(null);
+                          }}
+                          target={activeResourceDetail.target && !activeResourceDetail.target.startsWith('#') ? '_blank' : undefined}
+                          rel="noopener noreferrer"
+                          className="rounded-lg bg-[var(--accent)] text-[var(--btn-text)] px-4 py-2 text-xs font-bold uppercase tracking-wider hover:opacity-95 transition flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>{activeResourceDetail.cta || 'DOWNLOAD'}</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </AnimatePresence>
+
           </div>
+        )}
+
+        {/* Render BOM Manager segment */}
+        {activePage === 'bom' && (
+          <BOMManager />
+        )}
+
+        {/* Render COM Calculator segment */}
+        {activePage === 'com-calc' && (
+          <COMCalculator />
         )}
 
         {/* Render CONTACT segment */}
