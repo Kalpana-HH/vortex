@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw, CheckCircle, Lock, Unlock } from 'lucide-react';
+import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw, CheckCircle, Lock, Unlock, LogIn, LogOut, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { teamMembers } from './data/team';
 import BOMManager from './components/BOMManager';
 import COMCalculator from './components/COMCalculator';
 import PortfolioHub from './components/PortfolioHub';
+
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs, getDocFromServer, serverTimestamp } from 'firebase/firestore';
+import firebaseConfig from '../firebase-applet-config.json';
 
 const vortexLogo = '/assets/images/vortex_logo.png';
 const vortexLongLogo = '/assets/images/Vortex_long.png';
@@ -357,6 +362,58 @@ const decryptVal = (codes: number[], key = 42) => {
   return codes.map(c => String.fromCharCode(c ^ key)).join('');
 };
 
+// Initialize Firebase Application, Firestore Database, and Authentication services
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+const auth = getAuth(app);
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth?.currentUser?.uid || null,
+      email: auth?.currentUser?.email || null,
+      emailVerified: auth?.currentUser?.emailVerified || null,
+      isAnonymous: auth?.currentUser?.isAnonymous || null,
+      tenantId: auth?.currentUser?.tenantId || null,
+      providerInfo: auth?.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error Details: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 const getElementText = (el: HTMLElement): string => {
   if (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE) {
     return el.childNodes[0].nodeValue?.trim() || '';
@@ -451,6 +508,69 @@ const saveAllTextNodes = () => {
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageID>('home');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [dbReplacements, setDbReplacements] = useState<Record<string, string>>({});
+
+  // Register Auth listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Universal real-time Firestore synchronization
+  useEffect(() => {
+    // Validate connection to Firestore as requested by skill guideline
+    const validateConn = async () => {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration.");
+        }
+      }
+    };
+    validateConn();
+
+    // Register active real-time subscriber for site-wide text edits
+    const unsubscribe = onSnapshot(collection(db, "text_replacements"), (snapshot) => {
+      const liveReplacements: Record<string, string> = {};
+      snapshot.forEach((snapDoc) => {
+        const data = snapDoc.data();
+        if (data && data.selector && typeof data.text === 'string') {
+          liveReplacements[data.selector] = data.text;
+        }
+      });
+
+      // Synchronize back to local storage seamlessly so all components retrieve it
+      localStorage.setItem('vortex_text_replacements', JSON.stringify(liveReplacements));
+      setDbReplacements(liveReplacements);
+      restoreAllTextNodes();
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, "text_replacements");
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      console.error("Authentication Error:", err);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Sign Out Error:", err);
+    }
+  };
+
   const [isUnlocked, setIsUnlocked] = useState(() => {
     return localStorage.getItem('vortex_sys_config_unlocked') === 'true';
   });
@@ -2531,11 +2651,48 @@ export default function App() {
           id="cms-control-toolbar" 
           contentEditable="false"
           suppressContentEditableWarning={true}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#121214]/95 border border-[var(--accent)]/40 backdrop-blur-md px-6 py-4 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.85)] flex flex-wrap items-center gap-4 text-xs animate-slideIn select-none"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#121214]/95 border border-[var(--accent)]/40 backdrop-blur-md px-6 py-4 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.85)] flex flex-wrap items-center gap-4 text-xs animate-slideIn select-none max-w-[95vw]"
         >
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span className="font-mono uppercase font-black text-emerald-400 tracking-wider">VORTEX CMS LIVE MODE</span>
+          </div>
+          
+          <span className="text-[var(--text-secondary)]">|</span>
+
+          {/* Universal Sync Auth Control */}
+          <div className="flex items-center gap-2.5">
+            {!currentUser ? (
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                className="bg-[var(--accent)] hover:opacity-95 text-black px-2.5 py-1.5 rounded-lg font-mono text-[9px] font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition select-none shadow"
+              >
+                <LogIn className="h-3 w-3" />
+                <span>Sync with Google</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded ${
+                  currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com"
+                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
+                    : "bg-amber-500/15 text-amber-400 border border-amber-500/25"
+                }`}>
+                  {currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com"
+                    ? "Universal Synced"
+                    : "No Write Perms"}
+                </span>
+                <span className="text-[10px] text-stone-300 font-mono truncate max-w-[120px]" title={currentUser.email || ''}>{currentUser.email}</span>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="text-stone-500 hover:text-stone-300 transition cursor-pointer p-0.5 ml-0.5 flex items-center justify-center"
+                  title="Sign Out"
+                >
+                  <LogOut className="h-3 w-3" />
+                </button>
+              </div>
+            )}
           </div>
           
           <span className="text-[var(--text-secondary)]">|</span>
@@ -2545,14 +2702,27 @@ export default function App() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                if (confirm('Revert all custom site-wide text edits and restore original texts?')) {
+                if (confirm('Revert all custom site-wide text edits and restore original texts? This will also wipe those modifications universally.')) {
                   localStorage.removeItem('vortex_saved_text_nodes');
                   localStorage.removeItem('vortex_text_replacements');
                   localStorage.removeItem('vortex_custom_contact_info_name');
                   localStorage.removeItem('vortex_custom_contact_info_email');
                   localStorage.removeItem('vortex_custom_contact_info_message');
+                  
+                  // Empty firestore collection if admin
+                  const isAdminEmail = currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com");
+                  if (isAdminEmail) {
+                    try {
+                      const snapshot = await getDocs(collection(db, "text_replacements"));
+                      const deletePromises = snapshot.docs.map(snapDoc => deleteDoc(doc(db, "text_replacements", snapDoc.id)));
+                      await Promise.all(deletePromises);
+                    } catch (err) {
+                      console.error("Failed to universally clear text node documents", err);
+                    }
+                  }
+
                   window.location.reload();
                 }
               }}
@@ -2560,7 +2730,7 @@ export default function App() {
             >
               Clear Edits
             </button>
-
+ 
             <button
               type="button"
               onClick={(e) => {
@@ -2580,7 +2750,7 @@ export default function App() {
       {/* Structured Floating Edit Modal */}
       {editingElement && (
         <div id="cms-editor-popover" className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fadeIn">
-          <div className="bg-[#121214] border border-[var(--accent)]/45 rounded-2xl w-full max-w-lg p-6 shadow-[0_20px_50px_rgba(0,0,0,0.95)] text-left flex flex-col gap-4">
+          <div className="bg-[#121214] border border-[var(--accent)]/45 rounded-2xl w-full max-w-lg p-6 shadow-[0_20px_50px_rgba(0,0,0,0.95)] text-left flex flex-col gap-4 animate-slideIn">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
@@ -2609,9 +2779,29 @@ export default function App() {
             </div>
 
             {/* Selector Path Diagnostic */}
-            <div className="bg-[#0c0c0e] p-3 rounded-lg border border-stone-800/60 flex flex-col gap-1">
-              <span className="text-[8px] font-mono text-stone-500 uppercase tracking-widest block font-bold">Absolute Element Path</span>
-              <span className="text-[10px] font-mono text-stone-300 select-all font-semibold truncate block">{editingElement.selector}</span>
+            <div className="bg-[#0c0c0e] p-3 rounded-lg border border-stone-800/60 flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
+                <span className="text-[8px] font-mono text-stone-500 uppercase tracking-widest block font-bold">Absolute Element Path</span>
+                <span className="text-[10px] font-mono text-stone-300 select-all font-semibold truncate block">{editingElement.selector}</span>
+              </div>
+              
+              {/* Dev Firestore Status Indicator */}
+              <div className="pt-1.5 border-t border-stone-900 flex items-center justify-between text-[10px] font-mono">
+                <span className="text-stone-500 uppercase tracking-wider text-[9px]">Universal Sync Status:</span>
+                {currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com") ? (
+                  <span className="text-emerald-400 flex items-center gap-1 uppercase font-bold">
+                    <CheckCircle2 className="h-3 w-3" /> Enabled
+                  </span>
+                ) : (
+                  <button 
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    className="text-amber-400 hover:text-amber-300 transition underline tracking-wider uppercase font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    Local Only (Tap to Sync Auth)
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Action Panel */}
@@ -2625,7 +2815,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   const saved = localStorage.getItem('vortex_text_replacements') || '{}';
                   try {
                     const parsed = JSON.parse(saved);
@@ -2634,15 +2824,30 @@ export default function App() {
                     
                     // Trigger immediate text sync
                     restoreAllTextNodes();
+
+                    // If logged in as authorized admin, synchronize directly to universal FireStore
+                    const isAdminEmail = currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com");
+                    if (isAdminEmail) {
+                      const docId = btoa(editingElement.selector).replace(/\//g, '_').replace(/=/g, '');
+                      await setDoc(doc(db, "text_replacements", docId), {
+                        selector: editingElement.selector,
+                        text: editingElement.text,
+                        updatedAt: serverTimestamp()
+                      });
+                    }
                   } catch (err) {
-                    console.error(err);
+                    console.error("Failed to deploy changes universally:", err);
                   }
                   setEditingElement(null);
                 }}
                 className="bg-[var(--accent)] text-black font-extrabold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg hover:opacity-90 active:scale-[0.98] transition cursor-pointer flex items-center gap-1.5"
               >
                 <CheckCircle className="h-3.5 w-3.5" />
-                <span>Apply Checksum</span>
+                <span>
+                  {currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com") 
+                    ? "Apply & Sync Globally" 
+                    : "Apply Checksum Locally"}
+                </span>
               </button>
             </div>
 
