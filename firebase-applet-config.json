@@ -1,10 +1,9 @@
 {
-  "projectId": "composed-phenomenon-qjwpf",
-  "appId": "1:273352414291:web:8b38df799f4cc996f5e2a6",
-  "apiKey": "AIzaSyAfRGMlc0yqNx5hbTysW0F3J1FUs_hWlyo",
-  "authDomain": "composed-phenomenon-qjwpf.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-51e6ca25-6a15-4944-b790-2950ab915c20",
-  "storageBucket": "composed-phenomenon-qjwpf.firebasestorage.app",
-  "messagingSenderId": "273352414291",
-  "measurementId": ""
+  "apiKey": "AIzaSyCTYs-hkbmv_AdT-XyHeU-IQz1IUA-9MOM",
+  "authDomain": "web-vortex-ab664.firebaseapp.com",
+  "projectId": "web-vortex-ab664",
+  "storageBucket": "web-vortex-ab664.firebasestorage.app",
+  "messagingSenderId": "413954599397",
+  "appId": "1:413954599397:web:cc6f29b119f5a29fab670c",
+  "measurementId": "G-LHBQ50KLKK"
 }
