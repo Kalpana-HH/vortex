@@ -1,6 +1,6 @@
 {
   "name": "Vortex FTC Robotics",
-  "description": "The official website of FTC Robotics Team Vortex 00000, featuring a live countdown, updates blog, team bios, and robotic training resources.",
+  "description": "The official website of FTC Robotics Team Vortex, featuring a live countdown, updates blog, team roster, global engineering portfolio sharing hub, and robotic control tools.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

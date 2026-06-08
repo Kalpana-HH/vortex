@@ -39,3 +39,21 @@ export interface TrainingResource {
   guideSteps: string[];
   externalLinks?: { label: string; url: string }[];
 }
+
+export interface PortfolioItem {
+  id: string;
+  teamName: string;
+  teamNumber: string;
+  title: string;
+  season: string;
+  awards: string[];
+  location: string;
+  description: string;
+  fileName: string;
+  fileSize: string;
+  uploadDate: string;
+  summarySections?: {
+    title: string;
+    content: string;
+  }[];
+}

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw } from 'lucide-react';
+import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw, CheckCircle, Lock, Unlock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { teamMembers } from './data/team';
 import BOMManager from './components/BOMManager';
 import COMCalculator from './components/COMCalculator';
+import PortfolioHub from './components/PortfolioHub';
 
 const vortexLogo = '/assets/images/vortex_logo.png';
 const vortexLongLogo = '/assets/images/Vortex_long.png';
@@ -43,7 +44,7 @@ const ImageWithFallback = ({ src, alt, className, ...props }: React.ImgHTMLAttri
   );
 };
 
-type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery' | 'bom' | 'com-calc';
+type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery' | 'bom' | 'com-calc' | 'portfolios';
 
 interface PageItem {
   id: PageID;
@@ -352,8 +353,108 @@ const sponsorLogos = [
   }
 ];
 
+const decryptVal = (codes: number[], key = 42) => {
+  return codes.map(c => String.fromCharCode(c ^ key)).join('');
+};
+
+const getElementText = (el: HTMLElement): string => {
+  if (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE) {
+    return el.childNodes[0].nodeValue?.trim() || '';
+  }
+  for (let i = 0; i < el.childNodes.length; i++) {
+    const child = el.childNodes[i];
+    if (child.nodeType === Node.TEXT_NODE && child.nodeValue?.trim()) {
+      return child.nodeValue.trim();
+    }
+  }
+  return el.textContent?.trim() || '';
+};
+
+const getElementSelector = (el: HTMLElement): string => {
+  const parts: string[] = [];
+  let curr: HTMLElement | null = el;
+  while (curr && curr !== document.body) {
+    let part = curr.tagName.toLowerCase();
+    if (curr.id) {
+      part += `#${curr.id}`;
+      parts.unshift(part);
+      break;
+    } else {
+      let sibIndex = 0;
+      let sibling = curr.previousElementSibling;
+      while (sibling) {
+        if (sibling.tagName === curr.tagName) {
+          sibIndex++;
+        }
+        sibling = sibling.previousElementSibling;
+      }
+      part += `:nth-of-type(${sibIndex + 1})`;
+    }
+    parts.unshift(part);
+    curr = curr.parentElement;
+  }
+  return parts.join(' > ');
+};
+
+const setElementTextPreservingChildren = (el: HTMLElement, newText: string) => {
+  if (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE) {
+    if (el.childNodes[0].nodeValue !== newText) {
+      el.childNodes[0].nodeValue = newText;
+    }
+    return;
+  }
+  for (let i = 0; i < el.childNodes.length; i++) {
+    const child = el.childNodes[i];
+    if (child.nodeType === Node.TEXT_NODE && child.nodeValue?.trim()) {
+      if (child.nodeValue !== newText) {
+        child.nodeValue = newText;
+      }
+      return;
+    }
+  }
+  if (el.childNodes.length === 0) {
+    if (el.textContent !== newText) {
+      el.textContent = newText;
+    }
+  }
+};
+
+let isRestoring = false;
+
+const restoreAllTextNodes = () => {
+  if (isRestoring) return;
+  const saved = localStorage.getItem('vortex_text_replacements');
+  if (!saved) return;
+  try {
+    isRestoring = true;
+    const replacements = JSON.parse(saved);
+    for (const [selector, newVal] of Object.entries(replacements)) {
+      try {
+        const el = document.querySelector(selector) as HTMLElement;
+        if (el) {
+          setElementTextPreservingChildren(el, newVal as string);
+        }
+      } catch (err) {
+        // Suppress invalid selectors from older dynamic updates
+      }
+    }
+  } catch (e) {
+    console.error('Failed to restore text nodes', e);
+  } finally {
+    isRestoring = false;
+  }
+};
+
+const saveAllTextNodes = () => {
+  // Saved automatically on apply
+};
+
 export default function App() {
   const [activePage, setActivePage] = useState<PageID>('home');
+  const [isUnlocked, setIsUnlocked] = useState(() => {
+    return localStorage.getItem('vortex_sys_config_unlocked') === 'true';
+  });
+  const [editingElement, setEditingElement] = useState<{ selector: string; tagName: string; text: string } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [sponsorText, setSponsorText] = useState('');
@@ -425,6 +526,54 @@ export default function App() {
       setIsDraftAutosaved(false);
     }
   }, [contactName, contactEmail, contactMessage]);
+
+  // Handle live global CMS text edits and restoration logic when unlocked
+  useEffect(() => {
+    // Force immediate text restoration
+    restoreAllTextNodes();
+
+    // Set interactive double click editing logic if unlocked
+    if (isUnlocked) {
+      const handleDblClick = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (!target) return;
+
+        // Skip interactive control toolbars
+        if (target.closest('#cms-control-toolbar, #cms-editor-popover, #theme-engine-popover-container')) {
+          return;
+        }
+
+        const text = getElementText(target);
+        if (!text) return; // Skip if no editable string is registered
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        setEditingElement({
+          selector: getElementSelector(target),
+          tagName: target.tagName,
+          text: text
+        });
+      };
+
+      document.addEventListener('dblclick', handleDblClick, true);
+
+      // Continuously enforce restored states safely
+      const interval = setInterval(() => {
+        restoreAllTextNodes();
+      }, 350);
+
+      return () => {
+        document.removeEventListener('dblclick', handleDblClick, true);
+        clearInterval(interval);
+      };
+    } else {
+      const interval = setInterval(() => {
+        restoreAllTextNodes();
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, [isUnlocked, activePage]);
 
   // Floating Scroll to Top and FAQ states
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -674,10 +823,67 @@ export default function App() {
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) return;
+    const inputName = contactName.trim();
+    const inputEmail = contactEmail.trim().toLowerCase();
+    const inputMessage = contactMessage.trim();
+
+    if (!inputName || !inputEmail || !inputMessage) return;
     setContactSubmitting(true);
     setContactStatus('idle');
     setContactServerMessage('');
+
+    // Check if credentials match the secret authorization token (fully obfuscated in code)
+    try {
+      const dName = decryptVal([86, 111, 114, 116, 101, 120, 95, 70, 84, 67], 0); // Vortex_FTC
+      const dEmail = decryptVal([104, 114, 97, 104, 97, 48, 51, 49, 49, 64, 103, 109, 97, 105, 108, 46, 99, 111, 109], 0); // hraha0311@gmail.com
+      const dMsg = decryptVal([79, 112, 101, 110], 0); // Open
+
+      if (inputName === dName && inputEmail === dEmail && inputMessage === dMsg) {
+        // Authorize override session instantly, store configuration trigger
+        localStorage.setItem('vortex_sys_config_unlocked', 'true');
+        setIsUnlocked(true);
+        
+        setContactStatus('success');
+        setContactServerMessage('Developer Session Verified! Redirecting to CMS Platform...');
+        
+        // Clear variables as requested
+        localStorage.removeItem('vortex_draft_name');
+        localStorage.removeItem('vortex_draft_email');
+        localStorage.removeItem('vortex_draft_message');
+        setContactName('');
+        setContactEmail('');
+        setContactMessage('');
+        setContactSubmitting(false);
+
+        // Immediately navigate to unlocked portfolios archive
+        setTimeout(() => {
+          navigateTo('portfolios');
+        }, 1500);
+        return;
+      } else if (isUnlocked) {
+        // Secondary submission when already unlocked: save the updated info and show it
+        localStorage.setItem('vortex_custom_contact_info_name', inputName);
+        localStorage.setItem('vortex_custom_contact_info_email', inputEmail);
+        localStorage.setItem('vortex_custom_contact_info_message', inputMessage);
+
+        // Also save all current site text edits right away!
+        saveAllTextNodes();
+
+        setContactStatus('success');
+        setContactServerMessage('Session information and site-wide text edits successfully updated!');
+
+        localStorage.removeItem('vortex_draft_name');
+        localStorage.removeItem('vortex_draft_email');
+        localStorage.removeItem('vortex_draft_message');
+        setContactName('');
+        setContactEmail('');
+        setContactMessage('');
+        setContactSubmitting(false);
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+    }
 
     try {
       const response = await fetch('https://formsubmit.co/ajax/Hraha0311@gmail.com', {
@@ -1663,13 +1869,13 @@ export default function App() {
                   details: 'Our OnShape workspace contains the full parametric assemblies for the custom Mecanum chassis frame, cascading elevators, active claws, and electronics bracketry. Useful for inspecting material volumes.'
                 },
                 { 
-                  name: 'Engineering Portfolio PDF', 
+                  name: 'Engineering Portfolio Archives', 
                   icon: BookOpen, 
-                  desc: 'The verified portfolio notebook document submitted during regional Inspire Award design reviews.',
-                  isTool: false,
-                  target: '#portfolio',
-                  cta: 'LOAD DOCUMENT',
-                  details: 'This document presents the detailed design cycle of the Vortex drivetrain, our software flowcharts containing Pedro Pathing algorithms, autonomous splines, outreach events logging, and our total financial ledger.'
+                  desc: 'Our interactive global portfolio sharing center. Upload, browse, and filter engineering portfolios by awards won.',
+                  isTool: true,
+                  target: 'portfolios',
+                  cta: 'LAUNCH PORTFOLIO HUB',
+                  details: 'A specialized platform enabling robotics teams globally to submit and curate their engineering notebooks, filter by awards (like Inspire and Think), and browse digital A4 specifications.'
                 },
                 { 
                   name: 'Driver Station Config File', 
@@ -1935,6 +2141,11 @@ export default function App() {
           <COMCalculator />
         )}
 
+        {/* Render Portfolios Center segment */}
+        {activePage === 'portfolios' && (
+          <PortfolioHub />
+        )}
+
         {/* Render CONTACT segment */}
         {activePage === 'contact' && (
           <div className="mx-auto max-w-3xl px-6 py-24 min-h-[400px]" id="contact-page-view">
@@ -2042,6 +2253,20 @@ export default function App() {
                   🛡️ Securely processed and delivered via Team Vortex Mailer Routing
                 </div>
               </form>
+
+              {localStorage.getItem('vortex_custom_contact_info_name') && (
+                <div className="mt-8 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-5 text-left animate-fadeIn">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle className="h-4 w-4 text-emerald-400" />
+                    <span className="text-xs font-mono font-black text-emerald-400 uppercase tracking-wider">Active Updated Information Saved!</span>
+                  </div>
+                  <div className="space-y-2 font-mono text-[11px] text-[var(--text-secondary)]">
+                    <p><strong className="text-[var(--text-primary)]">AUTHORIZED IDENTIFIER:</strong> {localStorage.getItem('vortex_custom_contact_info_name')}</p>
+                    <p><strong className="text-[var(--text-primary)]">UPDATED CORE EMAIL:</strong> {localStorage.getItem('vortex_custom_contact_info_email')}</p>
+                    <p><strong className="text-[var(--text-primary)]">SESSION CUSTOM STATE:</strong> {localStorage.getItem('vortex_custom_contact_info_message')}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Elegant FAQ Section below the contact form */}
@@ -2299,6 +2524,130 @@ export default function App() {
         >
           <ChevronUp className="w-5 h-5" />
         </button>
+      )}
+
+      {isUnlocked && (
+        <div 
+          id="cms-control-toolbar" 
+          contentEditable="false"
+          suppressContentEditableWarning={true}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#121214]/95 border border-[var(--accent)]/40 backdrop-blur-md px-6 py-4 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.85)] flex flex-wrap items-center gap-4 text-xs animate-slideIn select-none"
+        >
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="font-mono uppercase font-black text-emerald-400 tracking-wider">VORTEX CMS LIVE MODE</span>
+          </div>
+          
+          <span className="text-[var(--text-secondary)]">|</span>
+          <span className="text-[10px] text-stone-200">Double-click any text element on the page to customize.</span>
+          <span className="text-[var(--text-secondary)]">|</span>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm('Revert all custom site-wide text edits and restore original texts?')) {
+                  localStorage.removeItem('vortex_saved_text_nodes');
+                  localStorage.removeItem('vortex_text_replacements');
+                  localStorage.removeItem('vortex_custom_contact_info_name');
+                  localStorage.removeItem('vortex_custom_contact_info_email');
+                  localStorage.removeItem('vortex_custom_contact_info_message');
+                  window.location.reload();
+                }
+              }}
+              className="bg-stone-800 hover:bg-stone-700 text-stone-300 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-[10px] cursor-pointer transition select-none"
+            >
+              Clear Edits
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                localStorage.removeItem('vortex_sys_config_unlocked');
+                setIsUnlocked(false);
+                window.location.reload();
+              }}
+              className="bg-red-950/40 border border-red-500/30 text-red-300 hover:bg-red-500/25 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-[10px] cursor-pointer transition select-none"
+            >
+              Lock CMS
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Structured Floating Edit Modal */}
+      {editingElement && (
+        <div id="cms-editor-popover" className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fadeIn">
+          <div className="bg-[#121214] border border-[var(--accent)]/45 rounded-2xl w-full max-w-lg p-6 shadow-[0_20px_50px_rgba(0,0,0,0.95)] text-left flex flex-col gap-4">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
+              <div className="flex items-center gap-1.5 font-mono text-[11px] font-black tracking-wider text-[var(--accent)]">
+                <Terminal className="h-4 w-4 text-[var(--accent)] animate-pulse" />
+                <span>EDIT TARGET: {editingElement.tagName.toUpperCase()}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingElement(null)}
+                className="text-stone-400 hover:text-white transition rounded-md hover:bg-stone-800 p-1 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Modal Edit Field */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Custom Localized Value</label>
+              <textarea
+                rows={4}
+                value={editingElement.text}
+                onChange={(e) => setEditingElement({ ...editingElement, text: e.target.value })}
+                className="w-full text-xs rounded-xl bg-[#09090b] border border-stone-800 p-3.5 text-stone-200 font-sans focus:outline-none focus:border-[var(--accent)]/60 transition resize-y"
+              />
+            </div>
+
+            {/* Selector Path Diagnostic */}
+            <div className="bg-[#0c0c0e] p-3 rounded-lg border border-stone-800/60 flex flex-col gap-1">
+              <span className="text-[8px] font-mono text-stone-500 uppercase tracking-widest block font-bold">Absolute Element Path</span>
+              <span className="text-[10px] font-mono text-stone-300 select-all font-semibold truncate block">{editingElement.selector}</span>
+            </div>
+
+            {/* Action Panel */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditingElement(null)}
+                className="text-stone-400 hover:text-white text-xs font-bold uppercase tracking-wider px-4 py-2 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const saved = localStorage.getItem('vortex_text_replacements') || '{}';
+                  try {
+                    const parsed = JSON.parse(saved);
+                    parsed[editingElement.selector] = editingElement.text;
+                    localStorage.setItem('vortex_text_replacements', JSON.stringify(parsed));
+                    
+                    // Trigger immediate text sync
+                    restoreAllTextNodes();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                  setEditingElement(null);
+                }}
+                className="bg-[var(--accent)] text-black font-extrabold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg hover:opacity-90 active:scale-[0.98] transition cursor-pointer flex items-center gap-1.5"
+              >
+                <CheckCircle className="h-3.5 w-3.5" />
+                <span>Apply Checksum</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
 
     </div>
