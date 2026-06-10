@@ -16,33 +16,82 @@ const vortexLogo = '/assets/images/vortex_logo.png';
 const vortexLongLogo = '/assets/images/Vortex_long.png';
 
 // Reusable Image component that handles missing imagery by rendering an elegant, styled SVG canvas fallback with technical indicators in the active theme
-const ImageWithFallback = ({ src, alt, className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
+const ImageWithFallback = ({ src: propSrc, alt, className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [localSrc, setLocalSrc] = useState<string | undefined>(undefined);
 
-  if (error || !src) {
-    return (
-      <div className={`flex flex-col items-center justify-center bg-gradient-to-br from-[var(--accent)]/10 to-[var(--accent)]/5 border border-[var(--border)] text-[var(--accent)] select-none p-4 text-center w-full h-full min-h-[160px] ${className}`}>
-        <Wrench className="w-8 h-8 opacity-40 animate-pulse mb-1.5" />
-        <span className="text-[10px] font-mono tracking-widest text-[var(--text-primary)] uppercase font-semibold">Image Pending</span>
-        <span className="text-[8px] font-mono text-[var(--text-secondary)] uppercase mt-0.5">Placeholder .png</span>
-      </div>
-    );
-  }
+  // Read current saved overriding src if any
+  const getOverridingSrc = () => {
+    if (!imgRef.current) return undefined;
+    try {
+      const savedImagesText = localStorage.getItem('vortex_image_replacements');
+      if (savedImagesText) {
+        const parsed = JSON.parse(savedImagesText);
+        const selector = getElementSelector(imgRef.current);
+        if (parsed[selector]) {
+          return parsed[selector];
+        }
+      }
+    } catch (e) {}
+    return undefined;
+  };
+
+  // Keep local image resource updated with global edits in real-time
+  useEffect(() => {
+    const updateSrc = () => {
+      const override = getOverridingSrc();
+      if (override !== undefined) {
+        setLocalSrc(override);
+      } else {
+        setLocalSrc(propSrc);
+      }
+    };
+
+    updateSrc();
+
+    // Small polling loop to sync edits globally on the client state instantly
+    const interval = setInterval(updateSrc, 300);
+    return () => clearInterval(interval);
+  }, [propSrc]);
+
+  const activeSrc = localSrc !== undefined ? localSrc : propSrc;
+  const showPlaceholder = error || !activeSrc;
+
+  // Reset states when the image source path shifts
+  useEffect(() => {
+    setError(false);
+    setLoading(true);
+  }, [activeSrc]);
 
   return (
     <div className="relative w-full h-full">
-      {loading && (
+      {showPlaceholder && (
+        <div className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[var(--accent)]/10 to-[var(--accent)]/5 border border-[var(--border)] text-[var(--accent)] select-none p-4 text-center w-full h-full ${className || ''}`}>
+          <Wrench className="w-8 h-8 opacity-40 animate-pulse mb-1.5" />
+          <span className="text-[10px] font-mono tracking-widest text-[var(--text-primary)] uppercase font-semibold">Image Pending</span>
+          <span className="text-[8px] font-mono text-[var(--text-secondary)] uppercase mt-0.5">Placeholder .png</span>
+        </div>
+      )}
+      
+      {loading && !showPlaceholder && (
         <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-primary)] animate-pulse z-10">
           <Cpu className="w-5 h-5 text-[var(--accent)] animate-spin" />
         </div>
       )}
+
+      {/* Maintain the active img tag in the DOM at all times so click observers can target, edit, and apply drops perfectly */}
       <img
-        src={src}
+        ref={imgRef}
+        src={activeSrc || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="transparent"/></svg>'}
         alt={alt}
-        className={className}
+        className={`${className || ''} ${showPlaceholder ? 'absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20' : ''}`}
         onError={() => setError(true)}
-        onLoad={() => setLoading(false)}
+        onLoad={() => {
+          setLoading(false);
+          setError(false);
+        }}
         referrerPolicy="no-referrer"
         {...props}
       />
@@ -57,73 +106,25 @@ interface PageItem {
   label: string;
 }
 
-// Interactive Spinning FIRST Experience odometer component with deceleration physics
-const FIRSTExperienceSpinner = ({ targetYears }: { targetYears: number }) => {
-  const [currentValue, setCurrentValue] = useState<string | number>('?');
-  const [isSpinning, setIsSpinning] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const startSpin = () => {
-    if (isSpinning) return;
-    setIsSpinning(true);
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    let counts = 0;
-    const maxCounts = 18;
-
-    const spin = () => {
-      counts++;
-      if (counts < maxCounts) {
-        setCurrentValue(Math.floor(Math.random() * 10));
-        const delay = 40 + (counts * counts * 0.9);
-        timerRef.current = setTimeout(spin, delay);
-      } else {
-        setCurrentValue(targetYears);
-        setIsSpinning(false);
-      }
-    };
-
-    timerRef.current = setTimeout(spin, 30);
-  };
-
-  const handleMouseLeave = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    setIsSpinning(false);
-    setCurrentValue('?');
-  };
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
-
+// Static FIRST Experience badge display
+const FIRSTExperienceYears = ({ targetYears }: { targetYears: number }) => {
   return (
     <div 
-      onMouseEnter={startSpin}
-      onMouseLeave={handleMouseLeave}
-      className="flex flex-col items-center justify-center bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-xl mt-3 select-none relative group/spin-card overflow-hidden w-full transition duration-200 hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/[0.02]"
+      className="flex flex-col items-center justify-center bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-xl mt-3 select-none relative overflow-hidden w-full transition duration-200 hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/[0.02]"
     >
       <span className="text-[9px] font-mono font-bold tracking-[0.16em] text-[var(--text-secondary)] uppercase">
         FIRST Experience
       </span>
       
-      {/* Visual odometer slot-card */}
+      {/* Visual static years slot-card */}
       <div className="relative mt-2 px-4 py-1.5 bg-[var(--card-bg)] border border-[var(--border)] rounded-md min-w-[75px] text-center shadow-inner overflow-hidden flex items-center justify-center gap-1.5">
         <div className="absolute inset-x-0 top-0 h-1 bg-black/5" />
-        <span className={`font-mono text-xl font-black transition-all duration-150 inline-block ${isSpinning ? 'text-[var(--accent)] scale-110 blur-[0.5px] animate-pulse' : 'text-[var(--text-primary)]'}`}>
-          {currentValue}
+        <span className="font-mono text-xl font-black text-[var(--accent)]">
+          {targetYears}
         </span>
         <span className="text-[10px] font-bold text-[var(--text-secondary)]">
-          {currentValue === 1 ? 'Year' : 'Years'}
+          {targetYears === 1 ? 'Year' : 'Years'}
         </span>
-      </div>
-
-      <div className="mt-2 text-[8px] font-bold text-[var(--text-secondary)] group-hover/spin-card:text-[var(--accent)] transition duration-150 uppercase tracking-widest flex items-center gap-1">
-        <span>{isSpinning ? '⚙️ SPINNING...' : currentValue === '?' ? '✨ HOVER TO SPIN' : '✅ REVEALED'}</span>
       </div>
     </div>
   );
@@ -239,7 +240,7 @@ const GalleryPageView = () => {
               <ImageWithFallback 
                 src={item.image} 
                 alt={item.title} 
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-contain p-4 bg-[var(--bg-primary)] transition-transform duration-300 group-hover:scale-105"
               />
             </div>
 
@@ -286,7 +287,7 @@ const GalleryPageView = () => {
               <ImageWithFallback 
                 src={zoomedImage.image} 
                 alt={zoomedImage.title} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain p-6"
               />
             </div>
 
@@ -550,9 +551,32 @@ const saveAllTextNodes = () => {
 export default function App() {
   const [activePage, setActivePage] = useState<PageID>('home');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [dbReplacements, setDbReplacements] = useState<Record<string, string>>({});
+  const [dbReplacements, setDbReplacements] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem('vortex_text_replacements');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
   const [firebaseAuthError, setFirebaseAuthError] = useState<string | null>(null);
   const [firebaseSyncError, setFirebaseSyncError] = useState<string | null>(null);
+
+  const getTextReplacement = (selector: string, fallback: string) => {
+    if (dbReplacements && dbReplacements[selector]) {
+      return dbReplacements[selector];
+    }
+    try {
+      const savedText = localStorage.getItem('vortex_text_replacements');
+      if (savedText) {
+        const parsed = JSON.parse(savedText);
+        if (parsed[selector]) {
+          return parsed[selector];
+        }
+      }
+    } catch (e) {}
+    return fallback;
+  };
 
   // Register Auth listener
   useEffect(() => {
@@ -688,13 +712,31 @@ export default function App() {
   const [editingElement, setEditingElement] = useState<{ 
     selector: string; 
     tagName: string; 
-    text: string;
+    text?: string;
     link?: string;
     linkSelector?: string;
+    isImage?: boolean;
+    imageSrc?: string;
+  } | null>(null);
+  const [hoveredElement, setHoveredElement] = useState<{ 
+    selector: string; 
+    rect: DOMRect; 
+    tagName: string; 
+    text?: string;
+    link?: string;
+    linkSelector?: string;
+    isImage?: boolean;
+    imageSrc?: string;
+    element: HTMLElement;
   } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [sponsorText, setSponsorText] = useState('');
+
+  // Synchronously restore custom CMS nodes before browser paints to prevent flicker
+  React.useLayoutEffect(() => {
+    restoreAllTextNodes();
+  }, [activePage, currentSlide, isUnlocked, currentUser, dbReplacements]);
 
   // Contact Form States
   const [contactName, setContactName] = useState('');
@@ -770,40 +812,188 @@ export default function App() {
     // Force immediate text restoration
     restoreAllTextNodes();
 
-    // Set interactive double click and drag-drop handlers if unlocked
     if (isUnlocked) {
-      const handleDblClick = (e: MouseEvent) => {
+      const handleGlobalClick = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         if (!target) return;
 
-        // Skip interactive control toolbars
-        if (target.closest('#cms-control-toolbar, #cms-editor-popover, #theme-engine-popover-container')) {
+        // Skip interactive control toolbars and popovers
+        if (target.closest('#cms-control-toolbar, #cms-editor-popover, #theme-engine-popover-container, .flatpickr-calendar, #cms-hover-badge')) {
           return;
         }
 
-        const anchorEl = target.closest('a') as HTMLAnchorElement | null;
-        const link = anchorEl ? anchorEl.getAttribute('href') || '' : undefined;
-        const linkSelector = anchorEl ? getElementSelector(anchorEl) : undefined;
+        // Avoid breaking input controls
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+          return;
+        }
 
-        const text = getElementText(target);
-        if (!text && !link) return; // Skip if no editable content or link is found
+        // Handle overridden links on click when unlocked so they navigate properly too
+        const clickable = target.closest('a, button, .cursor-pointer') as HTMLElement | null;
+        if (!clickable) return;
 
-        e.preventDefault();
-        e.stopPropagation();
+        const selector = getElementSelector(clickable);
+        const savedLinksText = localStorage.getItem('vortex_link_replacements');
+        if (savedLinksText) {
+          try {
+            const savedLinks = JSON.parse(savedLinksText);
+            const overriddenLink = savedLinks[selector];
+            if (overriddenLink) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              if (overriddenLink.startsWith('http://') || overriddenLink.startsWith('https://')) {
+                window.open(overriddenLink, '_blank', 'noopener,noreferrer');
+              } else {
+                navigateTo(overriddenLink);
+              }
+            }
+          } catch (err) {}
+        }
+      };
 
-        setEditingElement({
-          selector: getElementSelector(target),
-          tagName: target.tagName,
-          text: text,
-          link: link,
-          linkSelector: linkSelector
+      const handleMouseOver = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (!target) return;
+
+        // Skip popovers, tools, and the overlay banner itself
+        if (target.closest('#cms-control-toolbar, #cms-editor-popover, #theme-engine-popover-container, .flatpickr-calendar, #cms-hover-badge')) {
+          return;
+        }
+
+        if (['INPUT', 'TEXTAREA', 'SELECT', 'OPTION'].includes(target.tagName)) {
+          return;
+        }
+
+        const imgEl = (target.tagName === 'IMG' ? target : (target.closest('img') || target.querySelector('img'))) as HTMLImageElement | null;
+        
+        let edible: HTMLElement | null = null;
+        let isImg = false;
+        let link: string | undefined = undefined;
+        let linkSel: string | undefined = undefined;
+        let text: string | undefined = undefined;
+
+        if (imgEl) {
+          edible = imgEl;
+          isImg = true;
+          const parentAnchor = imgEl.closest('a') as HTMLAnchorElement | null;
+          link = parentAnchor ? parentAnchor.getAttribute('href') || '' : undefined;
+          linkSel = parentAnchor ? getElementSelector(parentAnchor) : undefined;
+        } else {
+          // Check if target is a clean text block first (rather than matching cursor-pointer parents immediately)
+          const TEXT_TAGS = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P', 'SPAN', 'LI', 'LABEL', 'EM', 'STRONG', 'B', 'I', 'SMALL', 'FIGCAPTION', 'TH', 'TD', 'BUTTON', 'A'];
+          const isTextTag = TEXT_TAGS.includes(target.tagName);
+          const rawText = getElementText(target);
+          const hasContent = rawText && rawText.trim().length > 0;
+
+          if (isTextTag && hasContent) {
+            edible = target;
+            text = rawText;
+          } else {
+            // Check direct text node children for custom tags
+            const hasTextChild = Array.from(target.childNodes).some(child => child.nodeType === Node.TEXT_NODE && child.nodeValue?.trim());
+            if (hasTextChild && hasContent) {
+              edible = target;
+              text = rawText;
+            }
+          }
+
+          // If we found an individual text block, grab the parent's clickable target link so we can still edit both text & link together
+          if (edible) {
+            const parentAnchor = target.closest('a') as HTMLAnchorElement | null;
+            const parentButton = target.closest('button') as HTMLButtonElement | null;
+            const parentCursorPointer = target.closest('.cursor-pointer') as HTMLElement | null;
+
+            if (parentAnchor) {
+              link = parentAnchor.getAttribute('href') || '';
+              linkSel = getElementSelector(parentAnchor);
+            } else if (parentButton) {
+              linkSel = getElementSelector(parentButton);
+              const savedLinks = JSON.parse(localStorage.getItem('vortex_link_replacements') || '{}');
+              link = savedLinks[linkSel] || '';
+            } else if (parentCursorPointer) {
+              linkSel = getElementSelector(parentCursorPointer);
+              const savedLinks = JSON.parse(localStorage.getItem('vortex_link_replacements') || '{}');
+              link = savedLinks[linkSel] || '';
+            }
+          } else {
+            // Fall back to actual clickable buttons/links if they don't have direct text but are wrappers
+            const anchorEl = target.closest('a') as HTMLAnchorElement | null;
+            const buttonEl = target.closest('button') as HTMLButtonElement | null;
+            const cursorPointerEl = target.closest('.cursor-pointer') as HTMLElement | null;
+
+            if (anchorEl) {
+              edible = anchorEl;
+              link = anchorEl.getAttribute('href') || '';
+              linkSel = getElementSelector(anchorEl);
+              text = getElementText(anchorEl);
+            } else if (buttonEl) {
+              edible = buttonEl;
+              const selector = getElementSelector(buttonEl);
+              const savedLinks = JSON.parse(localStorage.getItem('vortex_link_replacements') || '{}');
+              link = savedLinks[selector] || '';
+              linkSel = selector;
+              text = getElementText(buttonEl);
+            } else if (cursorPointerEl) {
+              edible = cursorPointerEl;
+              const selector = getElementSelector(cursorPointerEl);
+              const savedLinks = JSON.parse(localStorage.getItem('vortex_link_replacements') || '{}');
+              link = savedLinks[selector] || '';
+              linkSel = selector;
+              text = getElementText(cursorPointerEl);
+            }
+          }
+        }
+
+        if (edible) {
+          const selector = getElementSelector(edible);
+          const rect = edible.getBoundingClientRect();
+
+          if (hoveredElement && hoveredElement.selector === selector) {
+            const dy = Math.abs(hoveredElement.rect.top - rect.top);
+            const dx = Math.abs(hoveredElement.rect.left - rect.left);
+            const dw = Math.abs(hoveredElement.rect.width - rect.width);
+            const dh = Math.abs(hoveredElement.rect.height - rect.height);
+            if (dy < 1 && dx < 1 && dw < 1 && dh < 1) {
+              return;
+            }
+          }
+
+          setHoveredElement({
+            selector,
+            rect,
+            tagName: edible.tagName,
+            text,
+            link,
+            linkSelector: linkSel,
+            isImage: isImg,
+            imageSrc: isImg ? (edible as HTMLImageElement).src : undefined,
+            element: edible
+          });
+        } else {
+          if (!target.closest('#cms-hover-badge')) {
+            setHoveredElement(null);
+          }
+        }
+      };
+
+      const handleScrollOrResize = () => {
+        setHoveredElement(prev => {
+          if (!prev || !prev.element) return null;
+          const el = document.querySelector(prev.selector) as HTMLElement;
+          if (el) {
+            return {
+              ...prev,
+              rect: el.getBoundingClientRect()
+            };
+          }
+          return null;
         });
       };
 
       const handleDragOver = (e: DragEvent) => {
         const target = e.target as HTMLElement;
         if (!target) return;
-        const imgEl = target.tagName === 'IMG' ? target : target.querySelector('img');
+        const imgEl = (target.tagName === 'IMG' ? target : (target.closest('img') || target.querySelector('img'))) as HTMLImageElement | null;
         if (imgEl) {
           e.preventDefault();
           imgEl.classList.add('ring-4', 'ring-cyan-500', 'ring-offset-2', 'scale-[1.03]', 'transition-all', 'duration-300');
@@ -813,7 +1003,7 @@ export default function App() {
       const handleDragLeave = (e: DragEvent) => {
         const target = e.target as HTMLElement;
         if (!target) return;
-        const imgEl = target.tagName === 'IMG' ? target : target.querySelector('img');
+        const imgEl = (target.tagName === 'IMG' ? target : (target.closest('img') || target.querySelector('img'))) as HTMLImageElement | null;
         if (imgEl) {
           imgEl.classList.remove('ring-4', 'ring-cyan-500', 'ring-offset-2', 'scale-[1.03]');
         }
@@ -822,7 +1012,7 @@ export default function App() {
       const handleDrop = (e: DragEvent) => {
         const target = e.target as HTMLElement;
         if (!target) return;
-        const imgEl = (target.tagName === 'IMG' ? target : target.querySelector('img')) as HTMLImageElement;
+        const imgEl = (target.tagName === 'IMG' ? target : (target.closest('img') || target.querySelector('img'))) as HTMLImageElement | null;
         if (imgEl) {
           e.preventDefault();
           imgEl.classList.remove('ring-4', 'ring-cyan-500', 'ring-offset-2', 'scale-[1.03]');
@@ -866,7 +1056,10 @@ export default function App() {
         }
       };
 
-      document.addEventListener('dblclick', handleDblClick, true);
+      document.addEventListener('click', handleGlobalClick, true);
+      document.addEventListener('mouseover', handleMouseOver, true);
+      window.addEventListener('scroll', handleScrollOrResize, { passive: true });
+      window.addEventListener('resize', handleScrollOrResize, { passive: true });
       document.addEventListener('dragover', handleDragOver, true);
       document.addEventListener('dragleave', handleDragLeave, true);
       document.addEventListener('drop', handleDrop, true);
@@ -877,19 +1070,59 @@ export default function App() {
       }, 350);
 
       return () => {
-        document.removeEventListener('dblclick', handleDblClick, true);
+        document.removeEventListener('click', handleGlobalClick, true);
+        document.removeEventListener('mouseover', handleMouseOver, true);
+        window.removeEventListener('scroll', handleScrollOrResize);
+        window.removeEventListener('resize', handleScrollOrResize);
         document.removeEventListener('dragover', handleDragOver, true);
         document.removeEventListener('dragleave', handleDragLeave, true);
         document.removeEventListener('drop', handleDrop, true);
         clearInterval(interval);
       };
     } else {
+      const handleLockedClick = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (!target) return;
+
+        // Skip interactive components inside toolbars
+        if (target.closest('#cms-control-toolbar, #cms-editor-popover, #theme-engine-popover-container, .flatpickr-calendar')) {
+          return;
+        }
+
+        const clickable = target.closest('a, button, .cursor-pointer') as HTMLElement | null;
+        if (!clickable) return;
+
+        const selector = getElementSelector(clickable);
+        const savedLinksText = localStorage.getItem('vortex_link_replacements');
+        if (savedLinksText) {
+          try {
+            const savedLinks = JSON.parse(savedLinksText);
+            const overriddenLink = savedLinks[selector];
+            if (overriddenLink) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              if (overriddenLink.startsWith('http://') || overriddenLink.startsWith('https://')) {
+                window.open(overriddenLink, '_blank', 'noopener,noreferrer');
+              } else {
+                navigateTo(overriddenLink);
+              }
+            }
+          } catch (err) {}
+        }
+      };
+
+      document.addEventListener('click', handleLockedClick, true);
+
       const interval = setInterval(() => {
         restoreAllTextNodes();
       }, 500);
-      return () => clearInterval(interval);
+      return () => {
+        document.removeEventListener('click', handleLockedClick, true);
+        clearInterval(interval);
+      };
     }
-  }, [isUnlocked, activePage, currentUser]);
+  }, [isUnlocked, activePage, currentUser, hoveredElement]);
 
   // Floating Scroll to Top and FAQ states
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -1650,7 +1883,7 @@ export default function App() {
                 <ImageWithFallback 
                   src="/assets/images/robot_img.png" 
                   alt="Vortex Competition Robot Hero design representation" 
-                  className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                  className="w-full h-full object-contain p-4 transition duration-300 group-hover:scale-105"
                 />
               </div>
 
@@ -1829,8 +2062,10 @@ export default function App() {
                     {filteredMembers.map((member) => {
                       const placeholderPhoto = portraits[member.id] || `https://picsum.photos/seed/${member.name}/600/450`;
                       return (
-                        <div 
+                        <motion.div 
                           key={member.id} 
+                          whileHover={{ scale: 1.025, y: -4 }}
+                          transition={{ type: 'spring', stiffness: 350, damping: 25 }}
                           className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 flex flex-col gap-5 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left"
                           id={`team-member-card-${member.id}`}
                         >
@@ -1860,14 +2095,14 @@ export default function App() {
                               <ImageWithFallback 
                                 src={placeholderPhoto} 
                                 alt={`Portrait of ${member.name}`}
-                                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-105"
                               />
                             </div>
 
                             {/* FIRST Experience Animated odometer */}
-                            <FIRSTExperienceSpinner targetYears={member.yearsExperience || 0} />
+                            <FIRSTExperienceYears targetYears={member.yearsExperience || 0} />
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -1934,8 +2169,10 @@ export default function App() {
                     yearsExperience: 7
                   }
                 ].map((mentor) => (
-                  <div 
+                  <motion.div 
                     key={mentor.id} 
+                    whileHover={{ scale: 1.025, y: -4 }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 25 }}
                     className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 flex flex-col gap-5 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left"
                     id={`mentor-card-${mentor.id}`}
                   >
@@ -1966,14 +2203,14 @@ export default function App() {
                         <ImageWithFallback 
                           src={mentor.photo} 
                           alt={`Portrait of ${mentor.name}`}
-                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                          className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-105"
                         />
                       </div>
 
                       {/* FIRST Experience Animated odometer */}
-                      <FIRSTExperienceSpinner targetYears={mentor.yearsExperience || 0} />
+                      <FIRSTExperienceYears targetYears={mentor.yearsExperience || 0} />
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -2073,11 +2310,11 @@ export default function App() {
                   <ImageWithFallback 
                     src={sponsorLogos[currentSlide].logo} 
                     alt={sponsorLogos[currentSlide].name}
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-300"
+                    className="w-full h-full object-contain p-6 opacity-80 group-hover:opacity-100 transition duration-300"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[var(--bg-primary)] to-transparent p-4 flex flex-col justify-end">
                     <span id={`sponsor-tier-${currentSlide}`} className="text-[9px] font-mono font-black text-[var(--accent)] tracking-wider uppercase">
-                      {sponsorLogos[currentSlide].tier}
+                      {getTextReplacement(`#sponsor-tier-${currentSlide}`, sponsorLogos[currentSlide].tier)}
                     </span>
                   </div>
                 </div>
@@ -2086,10 +2323,10 @@ export default function App() {
                 <div className="w-full md:w-1/2 flex flex-col justify-center text-left">
                   <span className="text-xs font-mono text-[var(--text-secondary)] uppercase tracking-widest block">Corporate Champion</span>
                   <h3 id={`sponsor-name-${currentSlide}`} className="text-xl font-black text-[var(--text-primary)] uppercase mt-1">
-                    {sponsorLogos[currentSlide].name}
+                    {getTextReplacement(`#sponsor-name-${currentSlide}`, sponsorLogos[currentSlide].name)}
                   </h3>
                   <p id={`sponsor-desc-${currentSlide}`} className="text-xs text-[var(--text-secondary)] mt-3 leading-relaxed min-h-[50px]">
-                    {sponsorLogos[currentSlide].desc}
+                    {getTextReplacement(`#sponsor-desc-${currentSlide}`, sponsorLogos[currentSlide].desc)}
                   </p>
 
                   {/* Manual trigger controllers */}
@@ -3010,26 +3247,6 @@ export default function App() {
                         <path d={s.path} />
                       </svg>
                     </a>
-                    {isUnlocked && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          setEditingElement({
-                            selector: `#${identifier}`,
-                            tagName: 'A',
-                            text: s.name,
-                            link: currentHref,
-                            linkSelector: `#${identifier}`
-                          });
-                        }}
-                        className="absolute -top-1.5 -right-1.5 bg-[var(--accent)] text-black rounded-full p-1 opacity-0 group-hover/social:opacity-100 hover:scale-110 transition-all duration-200 shadow-md border border-[var(--border)] cursor-pointer z-20 flex items-center justify-center"
-                        title={`Edit ${s.name} link`}
-                      >
-                        <Edit className="h-2.5 w-2.5 text-black" />
-                      </button>
-                    )}
                   </div>
                 );
               })}
@@ -3182,6 +3399,63 @@ export default function App() {
         </div>
       )}
 
+      {/* Dynamic Hover-Edit Ring Highlights & Badges when Live CMS is unlocked */}
+      {isUnlocked && hoveredElement && (
+        <>
+          {/* Glowing Border Highlights around target elements */}
+          <div 
+            id="cms-hover-highlight-container"
+            style={{
+              position: 'fixed',
+              top: `${hoveredElement.rect.top - 2}px`,
+              left: `${hoveredElement.rect.left - 2}px`,
+              width: `${hoveredElement.rect.width + 4}px`,
+              height: `${hoveredElement.rect.height + 4}px`,
+              pointerEvents: 'none',
+              border: '1.5px dashed var(--accent)',
+              borderRadius: '6px',
+              boxShadow: '0 0 10px rgba(0, 240, 255, 0.25)',
+              zIndex: 45,
+              transition: 'all 0.15s ease-out'
+            }}
+          />
+
+          {/* Floating Edit Badge at the top-right corner of the hovered element */}
+          <div
+            style={{
+              position: 'fixed',
+              top: `${Math.max(4, hoveredElement.rect.top - 20)}px`,
+              left: `${hoveredElement.rect.right - 54}px`,
+              zIndex: 46,
+              transition: 'all 0.15s ease-out'
+            }}
+          >
+            <button
+              id="cms-hover-badge"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setEditingElement({
+                  selector: hoveredElement.selector,
+                  tagName: hoveredElement.tagName,
+                  text: hoveredElement.text,
+                  link: hoveredElement.link,
+                  linkSelector: hoveredElement.linkSelector,
+                  isImage: hoveredElement.isImage,
+                  imageSrc: hoveredElement.imageSrc
+                });
+                setHoveredElement(null);
+              }}
+              className="bg-[var(--accent)] text-black font-mono font-black text-[9px] uppercase tracking-widest px-2.5 py-1 rounded shadow-[0_4px_12px_rgba(0,0,0,0.5)] border border-black/30 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1 cursor-pointer select-none"
+            >
+              <Edit className="h-2.5 w-2.5" />
+              <span>EDIT</span>
+            </button>
+          </div>
+        </>
+      )}
+
       {/* Structured Floating Edit Modal */}
       {editingElement && (
         <div id="cms-editor-popover" className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fadeIn">
@@ -3191,7 +3465,7 @@ export default function App() {
             <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
               <div className="flex items-center gap-1.5 font-mono text-[11px] font-black tracking-wider text-[var(--accent)]">
                 <Terminal className="h-4 w-4 text-[var(--accent)] animate-pulse" />
-                <span>EDIT TARGET: {editingElement.tagName.toUpperCase()} {editingElement.link !== undefined ? "(WITH ACTIVE LINK)" : ""}</span>
+                <span>EDIT TARGET: {editingElement.isImage ? "IMAGE" : editingElement.tagName.toUpperCase()} {editingElement.link !== undefined ? "(WITH ACTIVE LINK)" : ""}</span>
               </div>
               <button
                 type="button"
@@ -3202,8 +3476,102 @@ export default function App() {
               </button>
             </div>
 
+            {/* Image Customizer (Choose files, Drag and Drop) */}
+            {editingElement.isImage && (
+              <div className="flex flex-col gap-3">
+                <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block">
+                  Image Asset Customizer
+                </label>
+                
+                {/* Drag and Drop Zone + Preview */}
+                <div 
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.add('border-[var(--accent)]', 'bg-[var(--accent)]/5');
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('border-[var(--accent)]', 'bg-[var(--accent)]/5');
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('border-[var(--accent)]', 'bg-[var(--accent)]/5');
+                    const files = e.dataTransfer?.files;
+                    if (files && files.length > 0) {
+                      const file = files[0];
+                      if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const base64 = event.target?.result as string;
+                          setEditingElement({
+                            ...editingElement,
+                            imageSrc: base64
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }
+                  }}
+                  className="border-2 border-dashed border-stone-800 rounded-xl p-6 bg-stone-950/40 text-center flex flex-col items-center justify-center gap-3 transition-all cursor-pointer hover:border-[var(--accent)]/50 group"
+                  onClick={() => document.getElementById('cms-file-input')?.click()}
+                >
+                  <input 
+                    type="file" 
+                    id="cms-file-input" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={(e) => {
+                      const files = e.target.files;
+                      if (files && files.length > 0) {
+                        const file = files[0];
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const base64 = event.target?.result as string;
+                          setEditingElement({
+                            ...editingElement,
+                            imageSrc: base64
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  {editingElement.imageSrc ? (
+                    <div className="relative w-full max-h-[140px] flex items-center justify-center overflow-hidden rounded-lg bg-stone-900 border border-stone-800/80">
+                      <img 
+                        src={editingElement.imageSrc} 
+                        alt="Preview" 
+                        className="max-w-full max-h-[130px] object-contain rounded"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-mono text-[9px] font-bold text-[var(--accent)] uppercase tracking-wider backdrop-blur-[2px]">
+                        Replace / Drop New Image
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 py-4">
+                      <Image className="h-8 w-8 text-stone-500 group-hover:text-[var(--accent)] transition duration-200" />
+                      <span className="text-xs font-bold text-stone-300">Click to Select or Drag & Drop Image Here</span>
+                      <span className="text-[9px] font-mono text-stone-500 uppercase tracking-widest">Supports PNG, JPG, SVG, WebP, GIF</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Direct source text field */}
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <label className="text-[9px] font-mono uppercase tracking-wider text-stone-500">Image Source (URL or Base64 Data)</label>
+                  <textarea
+                    rows={2}
+                    value={editingElement.imageSrc || ''}
+                    onChange={(e) => setEditingElement({ ...editingElement, imageSrc: e.target.value })}
+                    className="w-full text-[9px] font-mono rounded-xl bg-[#09090b] border border-stone-800 p-2 text-stone-400 focus:outline-none focus:border-[var(--accent)]/60 transition resize-none truncate"
+                    placeholder="data:image/png;base64,... or https://"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Modal Edit Field */}
-            {editingElement.text !== undefined && (
+            {editingElement.text !== undefined && !editingElement.isImage && (
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Custom Localized Value</label>
                 <textarea
@@ -3215,28 +3583,51 @@ export default function App() {
               </div>
             )}
 
-            {/* Link Edit Field (Only active if editing linked elements) */}
+            {/* Link Edit Field (Only active if editing linked elements or buttons) */}
             {editingElement.link !== undefined && (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Destination Hyperlink (URL)</label>
-                <input
-                  type="text"
-                  value={editingElement.link}
-                  onChange={(e) => setEditingElement({ ...editingElement, link: e.target.value })}
-                  className="w-full text-xs rounded-xl bg-[#09090b] border border-stone-800 p-3 text-stone-200 font-sans focus:outline-none focus:border-[var(--accent)]/60 transition"
-                  placeholder="https://example.com"
-                />
+              <div className="flex flex-col gap-1.5 animate-fadeIn">
+                <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Destination Hyperlink (URL or Page ID)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editingElement.link}
+                    onChange={(e) => setEditingElement({ ...editingElement, link: e.target.value })}
+                    className="flex-1 text-xs rounded-xl bg-[#09090b] border border-stone-800 p-3 text-stone-200 font-sans focus:outline-none focus:border-[var(--accent)]/60 transition"
+                    placeholder="https://example.com or pageId ('home', 'team', etc.)"
+                  />
+                  <select 
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setEditingElement({ ...editingElement, link: e.target.value });
+                        e.target.value = ''; // reset selection
+                      }
+                    }}
+                    className="text-[11px] font-sans rounded-xl bg-[#1a1a1f] border border-stone-800 px-3 text-stone-300 focus:outline-none cursor-pointer hover:border-stone-700 transition"
+                  >
+                    <option value="">Presets...</option>
+                    <option value="home">Home Page</option>
+                    <option value="team">Team Page</option>
+                    <option value="journey">Journey Page</option>
+                    <option value="sponsors">Sponsors Page</option>
+                    <option value="resources">Resources Page</option>
+                    <option value="gallery">Gallery Page</option>
+                    <option value="contact">Contact Page</option>
+                    <option value="bom">BOM Manager</option>
+                    <option value="com-calc">COM Calculator</option>
+                    <option value="portfolios">Portfolios</option>
+                  </select>
+                </div>
               </div>
             )}
 
             {/* Selector Path Diagnostic */}
             <div className="bg-[#0c0c0e] p-3 rounded-lg border border-stone-800/60 flex flex-col gap-2">
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] font-mono text-stone-500 uppercase tracking-widest block font-bold">Absolute Element Path</span>
+                <span className="text-[8px] font-mono text-stone-500 uppercase tracking-widest block font-bold block">Absolute Element Path</span>
                 <span className="text-[10px] font-mono text-stone-300 select-all font-semibold truncate block">{editingElement.selector}</span>
                 {editingElement.linkSelector && (
                   <>
-                    <span className="text-[8px] font-mono text-stone-500 uppercase tracking-widest block font-bold mt-1">Anchor Selector Path</span>
+                    <span className="text-[8px] font-mono text-stone-500 uppercase tracking-widest block font-bold mt-1 block">Anchor Selector Path</span>
                     <span className="text-[10px] font-mono text-stone-300 select-all font-semibold truncate block">{editingElement.linkSelector}</span>
                   </>
                 )}
@@ -3287,11 +3678,16 @@ export default function App() {
                 onClick={async () => {
                   try {
                     // 1. Save custom text
-                    if (editingElement.text) {
+                    if (editingElement.text && !editingElement.isImage) {
                       const savedTexts = localStorage.getItem('vortex_text_replacements') || '{}';
                       const parsedTexts = JSON.parse(savedTexts);
                       parsedTexts[editingElement.selector] = editingElement.text;
                       localStorage.setItem('vortex_text_replacements', JSON.stringify(parsedTexts));
+
+                      setDbReplacements(prev => ({
+                        ...prev,
+                        [editingElement.selector]: editingElement.text
+                      }));
 
                       // Sync with Firestore if admin
                       const isAdminEmail = currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com");
@@ -3319,6 +3715,31 @@ export default function App() {
                         await setDoc(doc(db, "link_replacements", docId), {
                           selector: editingElement.linkSelector,
                           href: editingElement.link,
+                          updatedAt: serverTimestamp()
+                        });
+                      }
+                    }
+
+                    // 3. Save custom image
+                    if (editingElement.isImage && editingElement.imageSrc) {
+                      const savedImages = localStorage.getItem('vortex_image_replacements') || '{}';
+                      const parsedImages = JSON.parse(savedImages);
+                      parsedImages[editingElement.selector] = editingElement.imageSrc;
+                      localStorage.setItem('vortex_image_replacements', JSON.stringify(parsedImages));
+
+                      // Find the element and update it immediately
+                      const img = document.querySelector(editingElement.selector) as HTMLImageElement;
+                      if (img) {
+                        img.src = editingElement.imageSrc;
+                      }
+
+                      // Sync with Firestore if admin
+                      const isAdminEmail = currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com");
+                      if (isAdminEmail) {
+                        const docId = btoa(editingElement.selector).replace(/\//g, '_').replace(/=/g, '');
+                        await setDoc(doc(db, "image_replacements", docId), {
+                          selector: editingElement.selector,
+                          src: editingElement.imageSrc,
                           updatedAt: serverTimestamp()
                         });
                       }
