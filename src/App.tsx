@@ -6,6 +6,8 @@ import BOMManager from './components/BOMManager';
 import COMCalculator from './components/COMCalculator';
 import PortfolioHub from './components/PortfolioHub';
 import CountdownTimer from './components/CountdownTimer';
+import PathSimulator from './components/PathSimulator';
+import LearnTab from './components/LearnTab';
 
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
@@ -18,7 +20,6 @@ const vortexLongLogo = '/assets/images/Vortex_long.png';
 // Reusable Image component that handles missing imagery by rendering an elegant, styled SVG canvas fallback with technical indicators in the active theme
 const ImageWithFallback = ({ src: propSrc, alt, className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(true);
   const imgRef = useRef<HTMLImageElement>(null);
   const [localSrc, setLocalSrc] = useState<string | undefined>(undefined);
 
@@ -62,7 +63,6 @@ const ImageWithFallback = ({ src: propSrc, alt, className, ...props }: React.Img
   // Reset states when the image source path shifts
   useEffect(() => {
     setError(false);
-    setLoading(true);
   }, [activeSrc]);
 
   return (
@@ -74,12 +74,6 @@ const ImageWithFallback = ({ src: propSrc, alt, className, ...props }: React.Img
           <span className="text-[8px] font-mono text-[var(--text-secondary)] uppercase mt-0.5">Placeholder .png</span>
         </div>
       )}
-      
-      {loading && !showPlaceholder && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-primary)] animate-pulse z-10">
-          <Cpu className="w-5 h-5 text-[var(--accent)] animate-spin" />
-        </div>
-      )}
 
       {/* Maintain the active img tag in the DOM at all times so click observers can target, edit, and apply drops perfectly */}
       <img
@@ -89,7 +83,6 @@ const ImageWithFallback = ({ src: propSrc, alt, className, ...props }: React.Img
         className={`${className || ''} ${showPlaceholder ? 'absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20' : ''}`}
         onError={() => setError(true)}
         onLoad={() => {
-          setLoading(false);
           setError(false);
         }}
         referrerPolicy="no-referrer"
@@ -99,7 +92,7 @@ const ImageWithFallback = ({ src: propSrc, alt, className, ...props }: React.Img
   );
 };
 
-type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery' | 'bom' | 'com-calc' | 'portfolios';
+type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery' | 'bom' | 'com-calc' | 'portfolios' | 'pathing' | 'learn';
 
 interface PageItem {
   id: PageID;
@@ -1234,7 +1227,7 @@ export default function App() {
 
   // Sponsor slideshow auto-timer
   useEffect(() => {
-    if (activePage === 'sponsors') {
+    if (activePage === 'home') {
       const slideInterval = setInterval(() => {
         setCurrentSlide((prev) => (prev + 1) % sponsorLogos.length);
       }, 4000);
@@ -1358,7 +1351,7 @@ export default function App() {
     { id: 'home', label: 'Home' },
     { id: 'team', label: 'Roster' },
     { id: 'journey', label: 'Our journey' },
-    { id: 'sponsors', label: 'Sponsors' },
+    { id: 'learn', label: 'Learn' },
     { id: 'gallery', label: 'Gallery' },
     { id: 'resources', label: 'Resources' },
     { id: 'contact', label: 'Contact' }
@@ -1866,7 +1859,12 @@ export default function App() {
                   Meet The Crew
                 </button>
                 <button 
-                  onClick={() => navigateTo('sponsors')}
+                  onClick={() => {
+                    navigateTo('home');
+                    setTimeout(() => {
+                      document.getElementById('sponsors-home-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
                   className="rounded-md px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--accent)] transition duration-150 bg-transparent cursor-pointer"
                 >
                   Sponsor Portal
@@ -1918,6 +1916,96 @@ export default function App() {
 
             {/* High-Contrast Live Event Countdown System */}
             <CountdownTimer isUnlocked={isUnlocked} />
+
+            {/* Render SPONSORS segment with animated automatic image slideshow and interactive typing button */}
+            <div className="flex flex-col gap-12 mt-4 pt-12 border-t border-[var(--border)]" id="sponsors-home-section">
+              <div className="text-center" id="sponsors-header-landmark">
+                <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Our Supporters</span>
+                <h2 className="text-3xl font-extrabold text-[var(--text-primary)] uppercase">Vortex Sponsors</h2>
+                <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl mx-auto">
+                  Without our generous corporate partners and mechanical advisors, custom sheet routing and national qualifiers would not be possible.
+                </p>
+              </div>
+
+              {/* Premium Autoplay/Manual Slideshow */}
+              <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 relative overflow-hidden text-left" id="sponsors-slideshow">
+                <div className="absolute top-4 right-4 bg-[var(--bg-primary)]/80 border border-[var(--border)] px-2 py-1 rounded text-[10px] font-mono text-[var(--accent)] uppercase tracking-wider">
+                  Industrial Showcase
+                </div>
+                
+                <div className="flex flex-col md:flex-row items-center gap-8 py-4">
+                  {/* Logo Image */}
+                  <div className="w-full md:w-1/2 aspect-[16/10] bg-[var(--bg-primary)]/45 border border-[var(--border)] rounded-xl overflow-hidden relative group flex items-center justify-center shrink-0">
+                    <ImageWithFallback 
+                      src={sponsorLogos[currentSlide].logo} 
+                      alt={sponsorLogos[currentSlide].name}
+                      className="w-full h-full object-contain p-6 opacity-80 group-hover:opacity-100 transition duration-300"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[var(--bg-primary)] to-transparent p-4 flex flex-col justify-end">
+                      <span id={`sponsor-tier-${currentSlide}`} className="text-[9px] font-mono font-black text-[var(--accent)] tracking-wider uppercase">
+                        {getTextReplacement(`#sponsor-tier-${currentSlide}`, sponsorLogos[currentSlide].tier)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Slideshow metadata */}
+                  <div className="w-full md:w-1/2 flex flex-col justify-center text-left">
+                    <span className="text-xs font-mono text-[var(--text-secondary)] uppercase tracking-widest block">Corporate Champion</span>
+                    <h3 id={`sponsor-name-${currentSlide}`} className="text-xl font-black text-[var(--text-primary)] uppercase mt-1">
+                      {getTextReplacement(`#sponsor-name-${currentSlide}`, sponsorLogos[currentSlide].name)}
+                    </h3>
+                    <p id={`sponsor-desc-${currentSlide}`} className="text-xs text-[var(--text-secondary)] mt-3 leading-relaxed min-h-[50px]">
+                      {getTextReplacement(`#sponsor-desc-${currentSlide}`, sponsorLogos[currentSlide].desc)}
+                    </p>
+
+                    {/* Manual trigger controllers */}
+                    <div className="flex items-center gap-4 mt-6">
+                      <div className="flex gap-1.5">
+                        {sponsorLogos.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setCurrentSlide(idx)}
+                            className={`h-2 rounded-full transition-all ${idx === currentSlide ? 'w-6 bg-[var(--accent)]' : 'w-2 bg-[var(--border)]'}`}
+                            title={`Go to slide ${idx + 1}`}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="flex gap-2 ml-auto">
+                        <button 
+                          onClick={() => setCurrentSlide((prev) => (prev === 0 ? sponsorLogos.length - 1 : prev - 1))}
+                          className="p-1.5 rounded bg-[var(--bg-primary)] hover:bg-[var(--accent)]/15 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition cursor-pointer"
+                          title="Prior slide"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => setCurrentSlide((prev) => (prev + 1) % sponsorLogos.length)}
+                          className="p-1.5 rounded bg-[var(--bg-primary)] hover:bg-[var(--accent)]/15 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition cursor-pointer"
+                          title="Next slide"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Typewriter Styled Big Sponsor Interest button */}
+              <div className="flex flex-col items-center gap-4 py-6 border-y border-[var(--border)] text-center">
+                <span className="text-xs text-[var(--text-secondary)] font-mono uppercase tracking-wider block">Join Team Vortex as a corporate affiliate</span>
+                <button
+                  onClick={() => navigateTo('contact')}
+                  className="w-full max-w-xl group relative overflow-hidden rounded-xl border border-[var(--accent)]/30 bg-[var(--bg-primary)] py-5 px-6 font-mono text-xs font-bold uppercase tracking-widest text-[var(--accent)] shadow-2xl transition duration-300 hover:border-[var(--accent)] hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] active:scale-98 cursor-pointer"
+                >
+                  <div className="flex items-center justify-center gap-1 min-h-[22px]">
+                    <span>{sponsorText}</span>
+                    <span className="w-1.5 h-3.5 bg-[var(--accent)] animate-pulse shrink-0 inline-block align-middle" />
+                  </div>
+                </button>
+              </div>
+            </div>
 
           </div>
         )}
@@ -2287,95 +2375,21 @@ export default function App() {
           </div>
         )}
 
-        {/* Render SPONSORS segment with animated automatic image slideshow and interactive typing button */}
-        {activePage === 'sponsors' && (
-          <div className="mx-auto max-w-4xl px-6 py-12 flex flex-col gap-12" id="sponsors-page-view">
-            <div className="border-b border-[var(--border)] pb-6 text-center" id="sponsors-header-landmark">
-              <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Our Supporters</span>
-              <h2 className="text-3xl font-extrabold text-[var(--text-primary)] uppercase">Vortex Sponsors</h2>
-              <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl mx-auto">
-                Without our generous corporate partners and mechanical advisors, custom sheet routing and national qualifiers would not be possible.
+        {/* Render LEARN Tab segment */}
+        {activePage === 'learn' && (
+          <div className="mx-auto max-w-6xl px-6 py-12 flex flex-col gap-8" id="learn-page-view">
+            <div className="text-center pb-6 border-b border-[var(--border)] flex flex-col items-center">
+              <span className="text-[10px] font-black tracking-[0.25em] text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-1 rounded-md mb-3">
+                FIRST Robotics Academy
+              </span>
+              <h2 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-wide uppercase">
+                Vortex Learn Portal
+              </h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl leading-relaxed">
+                Study the complete core values, mechanical kinematics, and spline path algorithms of the FIRST ecosystem. Practice on-field lessons, check your understanding, and acquire adaptive expertise.
               </p>
             </div>
-
-            {/* Premium Autoplay/Manual Slideshow */}
-            <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 relative overflow-hidden text-left" id="sponsors-slideshow">
-              <div className="absolute top-4 right-4 bg-[var(--bg-primary)]/80 border border-[var(--border)] px-2 py-1 rounded text-[10px] font-mono text-[var(--accent)] uppercase tracking-wider">
-                Industrial Showcase
-              </div>
-              
-              <div className="flex flex-col md:flex-row items-center gap-8 py-4">
-                {/* Logo Image */}
-                <div className="w-full md:w-1/2 aspect-[16/10] bg-[var(--bg-primary)]/45 border border-[var(--border)] rounded-xl overflow-hidden relative group flex items-center justify-center shrink-0">
-                  <ImageWithFallback 
-                    src={sponsorLogos[currentSlide].logo} 
-                    alt={sponsorLogos[currentSlide].name}
-                    className="w-full h-full object-contain p-6 opacity-80 group-hover:opacity-100 transition duration-300"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[var(--bg-primary)] to-transparent p-4 flex flex-col justify-end">
-                    <span id={`sponsor-tier-${currentSlide}`} className="text-[9px] font-mono font-black text-[var(--accent)] tracking-wider uppercase">
-                      {getTextReplacement(`#sponsor-tier-${currentSlide}`, sponsorLogos[currentSlide].tier)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Slideshow metadata */}
-                <div className="w-full md:w-1/2 flex flex-col justify-center text-left">
-                  <span className="text-xs font-mono text-[var(--text-secondary)] uppercase tracking-widest block">Corporate Champion</span>
-                  <h3 id={`sponsor-name-${currentSlide}`} className="text-xl font-black text-[var(--text-primary)] uppercase mt-1">
-                    {getTextReplacement(`#sponsor-name-${currentSlide}`, sponsorLogos[currentSlide].name)}
-                  </h3>
-                  <p id={`sponsor-desc-${currentSlide}`} className="text-xs text-[var(--text-secondary)] mt-3 leading-relaxed min-h-[50px]">
-                    {getTextReplacement(`#sponsor-desc-${currentSlide}`, sponsorLogos[currentSlide].desc)}
-                  </p>
-
-                  {/* Manual trigger controllers */}
-                  <div className="flex items-center gap-4 mt-6">
-                    <div className="flex gap-1.5">
-                      {sponsorLogos.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentSlide(idx)}
-                          className={`h-2 rounded-full transition-all ${idx === currentSlide ? 'w-6 bg-[var(--accent)]' : 'w-2 bg-[var(--border)]'}`}
-                          title={`Go to slide ${idx + 1}`}
-                        />
-                      ))}
-                    </div>
-
-                    <div className="flex gap-2 ml-auto">
-                      <button 
-                        onClick={() => setCurrentSlide((prev) => (prev === 0 ? sponsorLogos.length - 1 : prev - 1))}
-                        className="p-1.5 rounded bg-[var(--bg-primary)] hover:bg-[var(--accent)]/15 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition cursor-pointer"
-                        title="Prior slide"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </button>
-                      <button 
-                        onClick={() => setCurrentSlide((prev) => (prev + 1) % sponsorLogos.length)}
-                        className="p-1.5 rounded bg-[var(--bg-primary)] hover:bg-[var(--accent)]/15 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition cursor-pointer"
-                        title="Next slide"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Typewriter Styled Big Sponsor Interest button */}
-            <div className="flex flex-col items-center gap-4 py-6 border-y border-[var(--border)] text-center">
-              <span className="text-xs text-[var(--text-secondary)] font-mono uppercase tracking-wider block">Join Team Vortex as a corporate affiliate</span>
-              <button
-                onClick={() => navigateTo('contact')}
-                className="w-full max-w-xl group relative overflow-hidden rounded-xl border border-[var(--accent)]/30 bg-[var(--bg-primary)] py-5 px-6 font-mono text-xs font-bold uppercase tracking-widest text-[var(--accent)] shadow-2xl transition duration-300 hover:border-[var(--accent)] hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] active:scale-98 cursor-pointer"
-              >
-                <div className="flex items-center justify-center gap-1 min-h-[22px]">
-                  <span>{sponsorText}</span>
-                  <span className="w-1.5 h-3.5 bg-[var(--accent)] animate-pulse shrink-0 inline-block align-middle" />
-                </div>
-              </button>
-            </div>
+            <LearnTab />
           </div>
         )}
 
@@ -2501,6 +2515,15 @@ export default function App() {
               ];
 
               const sharedAssetsItems = [
+                { 
+                  name: 'Pedro Pathing Spline Simulator', 
+                  icon: Compass, 
+                  desc: 'Interactive bezier curve route creator. Drag control points directly on field coordinate maps, compute vectors, and generate production Java classes.',
+                  isTool: true,
+                  target: 'pathing' as any,
+                  cta: 'LAUNCH BUILDER',
+                  details: 'Visual interactive sandbox simulation of the 144" standard FIRST Tech Challenge arena. Drag-and-drop spline control nodes, edit tangent rotation behaviors, run path-following kinematic routines, and compile copy-ready Java code.'
+                },
                 { 
                   name: 'Dynamic Team Budget & BOM Planner', 
                   icon: Wrench, 
@@ -2871,6 +2894,32 @@ export default function App() {
           <BOMManager />
         )}
 
+        {/* Render Path Simulator segment */}
+        {activePage === 'pathing' && (
+          <div className="mx-auto max-w-6xl px-6 py-12 flex flex-col gap-8" id="pathing-page-view">
+            <div className="flex items-center gap-2 self-start">
+              <button 
+                onClick={() => navigateTo('resources')}
+                className="text-[10px] font-mono font-bold tracking-wider text-[var(--accent)] hover:opacity-80 flex items-center gap-1 cursor-pointer uppercase bg-[var(--accent)]/10 px-2.5 py-1.5 rounded-lg border border-[var(--accent)]/20"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" /> Back to Resources
+              </button>
+            </div>
+            <div className="text-center pb-6 border-b border-[var(--border)] flex flex-col items-center">
+              <span className="text-[10px] font-black tracking-[0.25em] text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-1 rounded-md mb-3">
+                Autonomous Kinematics Solver
+              </span>
+              <h2 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-wide uppercase">
+                Pedro Pathing Spline Builder
+              </h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl leading-relaxed">
+                Design multi-segment cubic bezier paths for First Tech Challenge. Drag handles, edit headings, run simulations, and copy ready-to-use follower code.
+              </p>
+            </div>
+            <PathSimulator />
+          </div>
+        )}
+
         {/* Render COM Calculator segment */}
         {activePage === 'com-calc' && (
           <COMCalculator />
@@ -3194,7 +3243,17 @@ export default function App() {
                 </span>
                 <div className="flex flex-col gap-25 text-xs text-[var(--text-secondary)]">
                   <button onClick={() => navigateTo('journey')} className="hover:text-[var(--text-primary)] transition text-left cursor-pointer font-bold">Inaugural Journey</button>
-                  <button onClick={() => navigateTo('sponsors')} className="hover:text-[var(--text-primary)] transition text-left cursor-pointer">Sponsors Portal</button>
+                  <button 
+                    onClick={() => {
+                      navigateTo('home');
+                      setTimeout(() => {
+                        document.getElementById('sponsors-home-section')?.scrollIntoView({ behavior: 'smooth' });
+                      }, 100);
+                    }} 
+                    className="hover:text-[var(--text-primary)] transition text-left cursor-pointer"
+                  >
+                    Sponsors Portal
+                  </button>
                   <button onClick={() => navigateTo('resources')} className="hover:text-[var(--text-primary)] transition text-left cursor-pointer">Engineering Decks</button>
                 </div>
               </div>
@@ -3608,7 +3667,7 @@ export default function App() {
                     <option value="home">Home Page</option>
                     <option value="team">Team Page</option>
                     <option value="journey">Journey Page</option>
-                    <option value="sponsors">Sponsors Page</option>
+                    <option value="learn">Learn Page</option>
                     <option value="resources">Resources Page</option>
                     <option value="gallery">Gallery Page</option>
                     <option value="contact">Contact Page</option>

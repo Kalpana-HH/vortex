@@ -112,6 +112,90 @@ Explain the kinematics briefly and list suggestions for hardware tuning (like pi
   }
 });
 
+// API endpoint for analyzing FIRST robotics knowledge response
+app.post("/api/analyze-first", async (req, res) => {
+  try {
+    const { response: userText, role } = req.body;
+    if (!userText || typeof userText !== "string") {
+      return res.status(400).json({ error: "Response text is required." });
+    }
+
+    if (!api_key) {
+      return res.status(500).json({ 
+        error: "GEMINI_API_KEY environment variable is not set." 
+      });
+    }
+
+    const systemInstruction = `You are the expert scientific coordinator and chief academic counselor for FIRST Tech Challenge Team Vortex.
+Your task is to analyze what the user says they know about FIRST Robotics (or STEM/coding/mechanics) and dynamically generate a customized educational curriculum response.
+
+The user's role is specified as "${role || 'student'}".
+- STUDENT ROLE: Focus explanation and missed topics on competitive engineering, hardware components, mecanum kinematic vectors, software algorithms (like Pedro Pathing, PID, autonomous routines, sensor loops), CAD modeling, and field gameplay.
+- COACH ROLE: Focus explanation and missed topics on structural team mentorship, curriculum design, funding pitches, project management tools, maintaining the 15-page Engineering Portfolio, scouting alliance algorithms, budgeting, and nurturing gracious professionalism.
+
+1. Categorize all concepts they show familiarity with (e.g., FRC, FTC, Java programming, mechanics, CAD etc.) into a simple array of "knownTopics". Keep topic strings friendly and scannable.
+2. Identify 2 or 3 critical FIRST, robotic engineering, or outreach/mentorship topics they DID NOT mention or could study deeper next.
+3. For each of these missed topics, generate:
+   - title: Short, engaging topic title
+   - explanation: A high-quality, friendly, concise, and highly informative explanation (approx 2 blocks) custom-written for them.
+   - practicalTip: A practical tip showing how this connects to Team Vortex's custom tools or operations.
+   - quizQuestion: A single direct multiple choice question to verify their understanding.
+   - quizOptions: Exactly 4 option strings, where only one is correct.
+   - correctOptionIndex: The 0-based index of the correct option in quizOptions.
+   - explanationOfAnswer: A clear explanation of why the correct option is indeed correct.`;
+
+    const promptText = `Analyze this user statement about their knowledge:
+"${userText}"
+
+Identify what they know (knownTopics) and output exactly 2 or 3 valuable missed topics (missedTopics) that they do not explicitly cover or could expand on, complete with teaching explanations and interactive checkpoint quizzes.`;
+
+    const geminiResponse = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: promptText,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            knownTopics: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+              description: "Short titles of topics the user showed familiarity with based on their text block."
+            },
+            missedTopics: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  explanation: { type: Type.STRING },
+                  practicalTip: { type: Type.STRING },
+                  quizQuestion: { type: Type.STRING },
+                  quizOptions: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING }
+                  },
+                  correctOptionIndex: { type: Type.INTEGER },
+                  explanationOfAnswer: { type: Type.STRING }
+                },
+                required: ["title", "explanation", "practicalTip", "quizQuestion", "quizOptions", "correctOptionIndex", "explanationOfAnswer"]
+              }
+            }
+          },
+          required: ["knownTopics", "missedTopics"]
+        }
+      }
+    });
+
+    const parsedData = JSON.parse(geminiResponse.text || "{}");
+    res.json(parsedData);
+  } catch (error: any) {
+    console.error("Gemini Analyze FIRST Error:", error);
+    res.status(500).json({ error: error?.message || "Internal server error occurred." });
+  }
+});
+
 // API endpoint for processing contact submissions and forwarding to the team captain's target email
 app.post("/api/contact", async (req, res) => {
   try {
@@ -152,6 +236,80 @@ app.post("/api/contact", async (req, res) => {
   } catch (error: any) {
     console.error("Contact API Server Error:", error);
     res.status(500).json({ error: error?.message || "Internal server error submitting contact form." });
+  }
+});
+
+// API endpoint for adaptive endlessly expanding FIRST learning portal
+app.post("/api/generate-lesson", async (req, res) => {
+  try {
+    const { topicInterest, pace, history, role } = req.body;
+    if (!topicInterest) {
+      return res.status(400).json({ error: "topicInterest has to be specified." });
+    }
+
+    if (!api_key) {
+      return res.status(500).json({ 
+        error: "GEMINI_API_KEY environment variable is not set." 
+      });
+    }
+
+    const systemInstruction = `You are the expert scientific coordinator and chief academic counselor for FIRST Tech Challenge Team Vortex.
+Your task is to generate an endlessly expandable, highly custom lesson details object.
+
+The user's role is specified as "${role || 'student'}".
+- STUDENT ROLE: Frame this topic from the perspective of an active high-school competitor (mechanics, math vectors, hands-on Java engineering, field execution, and custom CAD configurations).
+- COACH ROLE: Frame this topic from the perspective of a mentor, team sponsor, or educator (project leadership formats, pedagogical breakdowns, workspace safety, grading criteria, outreach/sponsorship campaigns, and strategic rule books).
+
+The user's current learning pace is configured as "${pace || 'normal'}" (either "slow" or "fast").
+- SLOW LEARNER PROFILE: Keep explanations extremely clear, friendly, and step-by-step. Use real-world analogies (e.g., matching rollers to a shopping cart or steering wheels to a bicycle). Break terms down simply and ask a straightforward, confidence-building quiz.
+- FAST LEARNER PROFILE: Provide high-caliber, university-level technical depth. Incorporate vector algebra, trigonometry coordinates, Java code snippets, calibration matrices, or structural stress variables. Make the quiz highly analytical and challenging.
+
+Ensure the topic does NOT repeat any of these historically covered topics: ${JSON.stringify(history || [])}.
+
+Generate exactly ONE lesson object:
+- title: Short, engaging topic title (incorporating the requested angle)
+- explanation: A high-quality, custom-written, highly informative explanation (approx 2 blocks) fit for their selected speed.
+- practicalTip: A practical tip showing how this connects to Team Vortex's custom tools or operations.
+- quizQuestion: A single direct multiple choice question to verify their understanding.
+- quizOptions: Exactly 4 option strings, where only one is correct.
+- correctOptionIndex: The 0-based index of the correct option in quizOptions.
+- explanationOfAnswer: A clear explanation of why the correct option is indeed correct.`;
+
+    const promptText = `Generate a customized ${pace || 'normal'}-pace educational lesson on the requested topic / interest:
+"${topicInterest}"
+
+Ensure it matches their learning style, role, avoids the history of completed modules, and provides an interactive checkpoint quiz.`;
+
+    const geminiResponse = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: promptText,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            explanation: { type: Type.STRING },
+            practicalTip: { type: Type.STRING },
+            quizQuestion: { type: Type.STRING },
+            quizOptions: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            },
+            correctOptionIndex: { type: Type.INTEGER },
+            explanationOfAnswer: { type: Type.STRING }
+          },
+          required: ["title", "explanation", "practicalTip", "quizQuestion", "quizOptions", "correctOptionIndex", "explanationOfAnswer"]
+        }
+      }
+    });
+
+    const parsedData = JSON.parse(geminiResponse.text || "{}");
+    res.json(parsedData);
+  } catch (error: any) {
+    console.error("Gemini Generate Lesson Error:", error);
+    res.status(500).json({ error: error?.message || "Internal server error occurred while expanding knowledge." });
   }
 });
 
