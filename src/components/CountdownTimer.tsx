@@ -262,11 +262,6 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
             <Calendar className="h-3.5 w-3.5 text-[var(--accent)]" />
             <span>Target Launch: <strong className="text-[var(--text-primary)] bg-[var(--bg-primary)] px-2 py-0.5 rounded-md font-mono">{new Date(targetDateStr).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</strong></span>
           </div>
-          
-          <div className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-[var(--accent)] uppercase font-mono animate-pulse">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Engage Hyperdrive</span>
-          </div>
         </div>
       </div>
     </div>

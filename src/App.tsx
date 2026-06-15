@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw, CheckCircle, Lock, Unlock, LogIn, LogOut, CheckCircle2, Search, Edit } from 'lucide-react';
+import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw, CheckCircle, Lock, Unlock, LogIn, LogOut, CheckCircle2, Search, Edit } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { teamMembers } from './data/team';
 import BOMManager from './components/BOMManager';
@@ -7,11 +7,10 @@ import COMCalculator from './components/COMCalculator';
 import PortfolioHub from './components/PortfolioHub';
 import CountdownTimer from './components/CountdownTimer';
 import PathSimulator from './components/PathSimulator';
-import LearnTab from './components/LearnTab';
 
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs, getDocFromServer, serverTimestamp } from 'firebase/firestore';
+import { initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs, getDocFromServer, serverTimestamp } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const vortexLogo = '/assets/images/vortex_logo.png';
@@ -92,7 +91,7 @@ const ImageWithFallback = ({ src: propSrc, alt, className, ...props }: React.Img
   );
 };
 
-type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery' | 'bom' | 'com-calc' | 'portfolios' | 'pathing' | 'learn';
+type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery' | 'bom' | 'com-calc' | 'portfolios' | 'pathing';
 
 interface PageItem {
   id: PageID;
@@ -174,6 +173,10 @@ const galleryItems = [
     date: 'August 2026'
   }
 ];
+
+// Duplicated rows for infinite scrolling collage background
+const collageRow1 = [...galleryItems, ...galleryItems, ...galleryItems];
+const collageRow2 = [...galleryItems, ...galleryItems, ...galleryItems].reverse();
 
 // Interactive Gallery View Component with Lightbox popup
 const GalleryPageView = () => {
@@ -359,7 +362,10 @@ const decryptVal = (codes: number[], key = 42) => {
 
 // Initialize Firebase Application, Firestore Database, and Authentication services
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+  ...((firebaseConfig as any).firestoreDatabaseId ? { databaseId: (firebaseConfig as any).firestoreDatabaseId } : {})
+});
 const auth = getAuth(app);
 
 enum OperationType {
@@ -1127,7 +1133,7 @@ export default function App() {
   const [messagePlaceholder, setMessagePlaceholder] = useState('');
 
   // Style customization / theme engine states
-  const [theme, setTheme] = useState<'light' | 'custom'>('light');
+  const [theme, setTheme] = useState<'light' | 'custom'>('custom');
   const [customizerOpen, setCustomizerOpen] = useState(false);
 
   // Custom colors state: default values represent a nice sleek cosmic style
@@ -1136,6 +1142,120 @@ export default function App() {
   const [customAccent, setCustomAccent] = useState('#00f0ff');
   const [customCardBg, setCustomCardBg] = useState('#131338');
   const [customBorder, setCustomBorder] = useState('#2563eb');
+
+  // Cursor glow style configuration states (Default color is teal)
+  const [cursorGlowEnabled, setCursorGlowEnabled] = useState(true);
+  const [cursorGlowColor, setCursorGlowColor] = useState('#14b8a6');
+  const [cursorGlowOpacity, setCursorGlowOpacity] = useState(0.35);
+  const [cursorGlowSize, setCursorGlowSize] = useState(100);
+  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
+  const [isMouseInWindow, setIsMouseInWindow] = useState(false);
+  const [isHoveringCard, setIsHoveringCard] = useState(false);
+
+  const lastHoveredCardRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    // Disable or bypass on coarse elements (standard capacitive phone/tablet screens)
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+    if (isTouchDevice) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+      if (!isMouseInWindow) {
+        setIsMouseInWindow(true);
+      }
+
+      // Detect if user's cursor is over an element styled like a card or a button
+      let isOver = false;
+      let cardEl: HTMLElement | null = null;
+      let target = e.target as HTMLElement | null;
+
+      // Do not apply cursor glow feature on elements inside a nav bar/navigation tabs
+      const isInsideNav = target && (target.closest('nav') || target.closest('[id*="nav"]') || target.closest('[class*="nav"]'));
+
+      if (!isInsideNav) {
+        while (target) {
+          if (target.classList && (
+            target.tagName === 'BUTTON' ||
+            target.getAttribute('role') === 'button' ||
+            target.classList.contains('bg-[var(--card-bg)]') ||
+            target.classList.contains('card') ||
+            target.classList.contains('cursor-pointer') ||
+            target.getAttribute('data-glow-card') === 'true' ||
+            (typeof target.className === 'string' && (
+              target.className.includes('bg-[var(--card-bg)]') ||
+              target.className.includes('cursor-pointer')
+            )) ||
+            target.getAttribute('id')?.includes('card')
+          )) {
+            cardEl = target;
+            isOver = true;
+            break;
+          }
+          target = target.parentElement;
+        }
+      }
+
+      // If we hovered over a different card or left the card completely
+      if (cardEl !== lastHoveredCardRef.current) {
+        if (lastHoveredCardRef.current) {
+          lastHoveredCardRef.current.classList.remove('glow-card-target');
+          lastHoveredCardRef.current.style.removeProperty('--mouse-x');
+          lastHoveredCardRef.current.style.removeProperty('--mouse-y');
+          lastHoveredCardRef.current.style.removeProperty('--glow-opacity-var');
+        }
+        lastHoveredCardRef.current = cardEl;
+      }
+
+      if (cardEl && cursorGlowEnabled) {
+        setIsHoveringCard(true);
+        if (!cardEl.classList.contains('glow-card-target')) {
+          cardEl.classList.add('glow-card-target');
+        }
+        const rect = cardEl.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        cardEl.style.setProperty('--mouse-x', `${x}px`);
+        cardEl.style.setProperty('--mouse-y', `${y}px`);
+        cardEl.style.setProperty('--glow-opacity-var', String(cursorGlowOpacity));
+      } else {
+        setIsHoveringCard(false);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      setIsMouseInWindow(false);
+      setIsHoveringCard(false);
+      if (lastHoveredCardRef.current) {
+        lastHoveredCardRef.current.classList.remove('glow-card-target');
+        lastHoveredCardRef.current.style.removeProperty('--mouse-x');
+        lastHoveredCardRef.current.style.removeProperty('--mouse-y');
+        lastHoveredCardRef.current.style.removeProperty('--glow-opacity-var');
+        lastHoveredCardRef.current = null;
+      }
+    };
+
+    const handleMouseEnter = () => {
+      setIsMouseInWindow(true);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseleave', handleMouseLeave);
+    document.addEventListener('mouseenter', handleMouseEnter);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('mouseenter', handleMouseEnter);
+      if (lastHoveredCardRef.current) {
+        lastHoveredCardRef.current.classList.remove('glow-card-target');
+        lastHoveredCardRef.current.style.removeProperty('--mouse-x');
+        lastHoveredCardRef.current.style.removeProperty('--mouse-y');
+        lastHoveredCardRef.current.style.removeProperty('--glow-opacity-var');
+        lastHoveredCardRef.current = null;
+      }
+    };
+  }, [isMouseInWindow, cursorGlowEnabled, cursorGlowOpacity]);
 
   // Compute live values depending on active theme mode
   const bgValue = theme === 'light' ? '#ffffff' : customBg;
@@ -1351,7 +1471,6 @@ export default function App() {
     { id: 'home', label: 'Home' },
     { id: 'team', label: 'Roster' },
     { id: 'journey', label: 'Our journey' },
-    { id: 'learn', label: 'Learn' },
     { id: 'gallery', label: 'Gallery' },
     { id: 'resources', label: 'Resources' },
     { id: 'contact', label: 'Contact' }
@@ -1497,7 +1616,7 @@ export default function App() {
         id="scroll-progress-bar"
       />
 
-      {/* Dynamic Style Injection representing the live color palette options */}
+      {/* Dynamic Style Injection representing the live color palette options and cursor glow styles */}
       <style>{`
         :root {
           --bg-primary: ${bgValue};
@@ -1510,6 +1629,47 @@ export default function App() {
           --footer-bg: ${footerBgValue};
           --btn-text: ${btnTextValue};
         }
+
+        @keyframes collage-scroll-left {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-33.3333%, 0, 0); }
+        }
+        @keyframes collage-scroll-right {
+          0% { transform: translate3d(-33.3333%, 0, 0); }
+          100% { transform: translate3d(0, 0, 0); }
+        }
+        .animate-collage-left {
+          animation: collage-scroll-left 45s linear infinite;
+        }
+        .animate-collage-right {
+          animation: collage-scroll-right 45s linear infinite;
+        }
+
+        ${cursorGlowEnabled ? `
+          .glow-card-target {
+            position: relative !important;
+            overflow: hidden !important;
+            isolation: isolate !important;
+          }
+          /* Using dynamic variables to render the glow effect safely confined within the card borders, behind content */
+          .glow-card-target::after {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            pointer-events: none !important;
+            z-index: -1 !important;
+            background: radial-gradient(
+              ${cursorGlowSize}px circle at var(--mouse-x, -9999px) var(--mouse-y, -9999px),
+              ${cursorGlowColor} 0%,
+              transparent 70%
+            ) !important;
+            opacity: var(--glow-opacity-var, 0) !important;
+            transition: opacity 0.25s ease !important;
+          }
+        ` : ''}
       `}</style>
       
       {/* High-End Design Navigation Bar */}
@@ -1768,20 +1928,83 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* Replay Onboarding Guide Option */}
-                  <div className="mt-4 border-t border-[var(--border)] pt-3 text-center">
-                    <button
-                      onClick={() => {
-                        setCustomizerOpen(false);
-                        if ((window as any).triggerVortexTour) {
-                          (window as any).triggerVortexTour();
-                        }
-                      }}
-                      className="inline-flex w-full items-center justify-center gap-1.5 text-[10px] font-mono font-black uppercase text-[var(--accent)] hover:opacity-85 cursor-pointer bg-[var(--bg-primary)] border border-[var(--border)] px-4 py-2.5 rounded-lg shadow-sm"
-                    >
-                      <RefreshCw className="h-3 w-3 animate-spin-slow" />
-                      <span>Replay Interactive Tour</span>
-                    </button>
+                  {/* Interactive Cursor Glow Controls */}
+                  <div className="mt-4 border-t border-[var(--border)] pt-4 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-primary)] font-extrabold block">Cursor Glow</span>
+                        <span className="text-[9px] text-[var(--text-secondary)] block">Ambient light overlays on content cards</span>
+                      </div>
+                      <button
+                        onClick={() => setCursorGlowEnabled(!cursorGlowEnabled)}
+                        className={`relative inline-flex h-5.5 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none cursor-pointer ${
+                          cursorGlowEnabled ? 'bg-[var(--accent)]' : 'bg-stone-600'
+                        }`}
+                        title="Toggle cursor glow"
+                        type="button"
+                      >
+                        <span
+                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${
+                            cursorGlowEnabled ? 'translate-x-[24px]' : 'translate-x-[4px]'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {cursorGlowEnabled && (
+                      <div className="flex flex-col gap-2.5 bg-[var(--bg-primary)] p-2.5 rounded-lg border border-[var(--border)] animate-fade-in text-left">
+                        {/* Glow Color Selector */}
+                        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] pb-2">
+                          <div className="text-left">
+                            <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-primary)] font-extrabold block">Glow Color</label>
+                            <span className="text-[9px] text-[var(--text-secondary)] block">Real-time light orb shade</span>
+                          </div>
+                          <input 
+                            type="color" 
+                            value={cursorGlowColor} 
+                            onChange={(e) => setCursorGlowColor(e.target.value)} 
+                            className="h-8 w-14 rounded border border-[var(--border)] cursor-pointer bg-transparent"
+                            title="Choose cursor glow color"
+                          />
+                        </div>
+
+                        {/* Live Opacity Slider */}
+                        <div className="flex flex-col gap-1.5 pt-1 border-b border-[var(--border)] pb-2.5">
+                          <div className="flex justify-between items-center">
+                            <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-primary)] font-extrabold block">Glow Opacity</label>
+                            <span className="text-[10px] font-mono text-[var(--accent)] font-bold">{Math.round(cursorGlowOpacity * 100)}%</span>
+                          </div>
+                          <input 
+                            type="range" 
+                            min="0.05" 
+                            max="1.00" 
+                            step="0.05"
+                            value={cursorGlowOpacity} 
+                            onChange={(e) => setCursorGlowOpacity(parseFloat(e.target.value))} 
+                            className="w-full accent-[var(--accent)] h-1.5 bg-stone-800 rounded-lg cursor-pointer"
+                            title="Set cursor glow opacity level"
+                          />
+                        </div>
+
+                        {/* Live Size Slider */}
+                        <div className="flex flex-col gap-1.5 pt-1">
+                          <div className="flex justify-between items-center">
+                            <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-primary)] font-extrabold block">Glow Size</label>
+                            <span className="text-[10px] font-mono text-[var(--accent)] font-bold">{cursorGlowSize}px</span>
+                          </div>
+                          <input 
+                            type="range" 
+                            min="40" 
+                            max="600" 
+                            step="10"
+                            value={cursorGlowSize} 
+                            onChange={(e) => setCursorGlowSize(parseInt(e.target.value))} 
+                            className="w-full accent-[var(--accent)] h-1.5 bg-stone-800 rounded-lg cursor-pointer"
+                            title="Set cursor glow area size"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                 </div>
@@ -1827,47 +2050,106 @@ export default function App() {
         {activePage === 'home' && (
           <div className="mx-auto max-w-6xl px-6 py-12 flex flex-col gap-16" id="home-page-view">
             
-            {/* Central High-Fidelity Branding Banner Matching Image Style Exactly */}
-            <div className="relative text-center py-16 px-8 rounded-2xl bg-[var(--card-bg)] border border-[var(--border)] overflow-hidden flex flex-col items-center justify-center shadow-md transition duration-300">
-              <div className="absolute top-0 left-0 w-full h-1 bg-[var(--accent)]"></div>
+             {/* Central High-Fidelity Branding Banner Matching Image Style Exactly */}
+            <div className="relative text-center py-16 px-8 flex flex-col items-center justify-center transition duration-300 min-h-[calc(100vh-140px)] pb-32 overflow-hidden rounded-2xl">
               
-              {/* Massive Logo Frame matching vertical branding */}
-              <div className="mb-6 flex flex-col items-center justify-center gap-4">
-                <div className="relative">
-                  <div className="absolute -inset-2 bg-[var(--accent)]/15 rounded-2xl blur-lg"></div>
-                  <img 
-                    src={vortexLogo} 
-                    alt="Vortex Team Emblem" 
-                    className="relative h-28 w-28 object-contain transition duration-300 hover:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-                <h1 className="font-sans text-4xl md:text-5xl font-black tracking-[0.25em] text-[var(--text-primary)] uppercase mt-2 leading-none">
-                  VORTEX
-                </h1>
-              </div>
-              
-              <p className="text-sm text-[var(--text-secondary)] tracking-wide max-w-md mx-auto leading-relaxed uppercase">
-                FTC Team #00000 • Custom Engineering, High-Precision Dynamics, and Community-First Science and Technology Kampaigns.
-              </p>
+              {/* Scrolling Background Photo Collage */}
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none opacity-[0.24] dark:opacity-[0.14] transition-opacity duration-300">
+                {/* Dynamic radial & linear mask over the background for flawless contrast */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,var(--bg-primary)_80%)] z-10" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-primary)]/80 via-transparent to-[var(--bg-primary)]/90 z-10" />
+                
+                {/* Dual Row Interlocking Rotating Stream Grid */}
+                <div className="flex flex-col gap-6 transform -rotate-3 md:-rotate-6 scale-110 h-full justify-center opacity-85">
+                  {/* Row 1: Leftward moving track */}
+                  <div className="flex whitespace-nowrap gap-4 w-[300%] animate-collage-left">
+                    {collageRow1.map((item, index) => (
+                      <div 
+                        key={`col1-${item.id}-${index}`} 
+                        className="w-48 h-32 md:w-64 md:h-40 rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--card-bg)] shadow-md flex-shrink-0"
+                      >
+                        <img 
+                          src={item.image} 
+                          alt={item.title} 
+                          className="w-full h-full object-cover filter grayscale contrast-115 brightness-[0.85] dark:brightness-75"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ))}
+                  </div>
 
-              <div className="mt-8 flex flex-wrap justify-center gap-4">
-                <button 
-                  onClick={() => navigateTo('team')}
-                  className="rounded-md px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150 cursor-pointer"
-                >
-                  Meet The Crew
-                </button>
-                <button 
+                  {/* Row 2: Rightward moving track */}
+                  <div className="flex whitespace-nowrap gap-4 w-[300%] animate-collage-right">
+                    {collageRow2.map((item, index) => (
+                      <div 
+                        key={`col2-${item.id}-${index}`} 
+                        className="w-48 h-32 md:w-64 md:h-40 rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--card-bg)] shadow-md flex-shrink-0"
+                      >
+                        <img 
+                          src={item.image} 
+                          alt={item.title} 
+                          className="w-full h-full object-cover filter grayscale contrast-115 brightness-[0.85] dark:brightness-75"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Foreground content wrapped in relative z-10 container for pointer-events & elite legibility */}
+              <div className="relative z-10 flex flex-col items-center justify-center">
+                {/* Massive Logo Frame matching vertical branding */}
+                <div className="mb-6 flex flex-col items-center justify-center gap-4">
+                  <div className="relative">
+                    <div className="absolute -inset-2 bg-[var(--accent)]/15 rounded-2xl blur-lg"></div>
+                    <img 
+                      src={vortexLogo} 
+                      alt="Vortex Team Emblem" 
+                      className="relative h-28 w-28 object-contain transition duration-300 hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <h1 className="font-sans text-4xl md:text-5xl font-black tracking-[0.25em] text-[var(--text-primary)] uppercase mt-2 leading-none">
+                    VORTEX
+                  </h1>
+                </div>
+                
+                <p className="text-sm text-[var(--text-secondary)] tracking-wide max-w-md mx-auto leading-relaxed uppercase">
+                  FTC Team #00000 • Custom Engineering, High-Precision Dynamics, and Community-First Science and Technology Kampaigns.
+                </p>
+
+                <div className="mt-8 flex flex-wrap justify-center gap-4">
+                  <button 
+                    onClick={() => navigateTo('team')}
+                    className="rounded-md px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150 cursor-pointer"
+                  >
+                    Meet The Crew
+                  </button>
+                  <button 
+                    onClick={() => {
+                      navigateTo('home');
+                      setTimeout(() => {
+                        document.getElementById('sponsors-home-section')?.scrollIntoView({ behavior: 'smooth' });
+                      }, 100);
+                    }}
+                    className="rounded-md px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--accent)] transition duration-150 bg-transparent cursor-pointer"
+                  >
+                    Sponsor Portal
+                  </button>
+                </div>
+              </div>
+
+              {/* Animated Scroll Down indicator button per user request */}
+              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center animate-bounce z-20">
+                <button
                   onClick={() => {
-                    navigateTo('home');
-                    setTimeout(() => {
-                      document.getElementById('sponsors-home-section')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 100);
+                    document.getElementById('machine-spec-showcase')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
-                  className="rounded-md px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--accent)] transition duration-150 bg-transparent cursor-pointer"
+                  className="p-3 bg-[var(--card-bg)] hover:bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--accent)] rounded-full shadow-md cursor-pointer transition-all duration-300 flex items-center justify-center group"
+                  aria-label="Scroll down to content"
                 >
-                  Sponsor Portal
+                  <ChevronDown className="h-5 w-5 transition duration-300 group-hover:translate-y-0.5" />
                 </button>
               </div>
             </div>
@@ -1876,12 +2158,12 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-8 overflow-hidden relative shadow-sm hover:border-[var(--accent)]/35 transition-all duration-300" id="machine-spec-showcase">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/[0.03] rounded-full blur-3xl pointer-events-none" />
               
-              {/* Image side */}
+              {/* Image side - Hiding the CAD image to extend the whitespace so it's not visible, per user request */}
               <div className="md:col-span-5 relative aspect-[16/11] rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-primary)] group">
                 <ImageWithFallback 
                   src="/assets/images/robot_img.png" 
                   alt="Vortex Competition Robot Hero design representation" 
-                  className="w-full h-full object-contain p-4 transition duration-300 group-hover:scale-105"
+                  className="hidden w-full h-full object-contain p-4 transition duration-300 group-hover:scale-105"
                 />
               </div>
 
@@ -2375,24 +2657,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Render LEARN Tab segment */}
-        {activePage === 'learn' && (
-          <div className="mx-auto max-w-6xl px-6 py-12 flex flex-col gap-8" id="learn-page-view">
-            <div className="text-center pb-6 border-b border-[var(--border)] flex flex-col items-center">
-              <span className="text-[10px] font-black tracking-[0.25em] text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-1 rounded-md mb-3">
-                FIRST Robotics Academy
-              </span>
-              <h2 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-wide uppercase">
-                Vortex Learn Portal
-              </h2>
-              <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl leading-relaxed">
-                Study the complete core values, mechanical kinematics, and spline path algorithms of the FIRST ecosystem. Practice on-field lessons, check your understanding, and acquire adaptive expertise.
-              </p>
-            </div>
-            <LearnTab />
-          </div>
-        )}
-
         {/* Render RESOURCES segment */}
         {activePage === 'resources' && (
           <div className="mx-auto max-w-4xl px-6 py-12 flex flex-col gap-12" id="resources-page-view">
@@ -2441,46 +2705,6 @@ export default function App() {
                   cta: 'GO TO CODE GITHUB'
                 },
                 { 
-                  id: 2, 
-                  name: 'Polynomial Integrator', 
-                  desc: 'Mathematical solver to calibrate bezier curves and acceleration profile coefficients.',
-                  details: 'Vortex integrates a custom 5th-order polynomial solver. It minimizes total kinematic jerk along curvilinear coordinates s(t), assuring smooth, fast traction transitions during intake maneuvers.',
-                  icon: Compass,
-                  cta: 'VIEW MATH SOLVER'
-                },
-                { 
-                  id: 3, 
-                  name: 'Bezier Curve Plottings', 
-                  desc: 'Virtual coordinate plot scripts to simulate path curves directly on high-performance canvases.',
-                  details: 'Paths are defined as composite parametric Bezier curves of the form:\nB(t) = Sum_{i=0}^n C(n, i) * (1-t)^{n-i} * t^i * P_i\n\nUse our interactive plot simulator to visualize path spline transitions before deployment on the real robot.',
-                  icon: Compass,
-                  cta: 'SIMULATE PATHS'
-                },
-                { 
-                  id: 4, 
-                  name: 'Odometry Wheel Calibration', 
-                  desc: 'Adjust dead-wheel encoder ticks per revolution to assure absolute real-time positioning feedback.',
-                  details: 'Track width is calibrated via concentric rotations, adjusting horizontal and vertical encoder matrices.\n\nCalibrate using standard formula:\nDelta_Theta = (Delta_Right_Encoder - Delta_Left_Encoder) / Track_Width',
-                  icon: Compass,
-                  cta: 'CALIBRATION DOC'
-                },
-                { 
-                  id: 5, 
-                  name: 'Linear Velocity Controller', 
-                  desc: 'PID feedforward tuning configurations to control acceleration steps during auto cycles.',
-                  details: 'Combines closed-loop PID error feedback with theoretical voltage feedforward (Kv, Ks, Ka). Keeps movement deviation strictly within +/- 0.25 inches during intense gameplay.',
-                  icon: Compass,
-                  cta: 'VIEW PID GRAPHS'
-                },
-                { 
-                  id: 6, 
-                  name: 'Tangent Angle Matrices', 
-                  desc: 'Verify tangent vectors when driving backwards during intricate cone intake cycles.',
-                  details: 'Calculates the dynamic rotational heading Theta aligning exactly with the path\'s instantaneous tangent vector:\n\nTheta = arctan2(y\'(t), x\'(t))',
-                  icon: Compass,
-                  cta: 'SOLVER SHEET'
-                },
-                { 
                   id: 7, 
                   name: 'Braking Distance Optimizer', 
                   desc: 'Configure motor voltage braking routines to stop precisely in front of high-junction grids.',
@@ -2516,15 +2740,6 @@ export default function App() {
 
               const sharedAssetsItems = [
                 { 
-                  name: 'Pedro Pathing Spline Simulator', 
-                  icon: Compass, 
-                  desc: 'Interactive bezier curve route creator. Drag control points directly on field coordinate maps, compute vectors, and generate production Java classes.',
-                  isTool: true,
-                  target: 'pathing' as any,
-                  cta: 'LAUNCH BUILDER',
-                  details: 'Visual interactive sandbox simulation of the 144" standard FIRST Tech Challenge arena. Drag-and-drop spline control nodes, edit tangent rotation behaviors, run path-following kinematic routines, and compile copy-ready Java code.'
-                },
-                { 
                   name: 'Dynamic Team Budget & BOM Planner', 
                   icon: Wrench, 
                   desc: 'Interactive parts and ledger manager. Budget structural assemblies, aluminum structures, electronics, and weights in real-time.',
@@ -2559,33 +2774,6 @@ export default function App() {
                   target: 'portfolios',
                   cta: 'LAUNCH PORTFOLIO HUB',
                   details: 'A specialized platform enabling robotics teams globally to submit and curate their engineering notebooks, filter by awards (like Inspire and Think), and browse digital A4 specifications.'
-                },
-                { 
-                  name: 'Driver Station Config File', 
-                  icon: Terminal, 
-                  desc: 'Telemetry dashboard layouts, button mapping parameters, and gamepad profiles for rapid operator execution.',
-                  isTool: false,
-                  target: '#station-config',
-                  cta: 'DOWNLOAD CONFIG',
-                  details: 'Pre-configured configuration file containing Driver Station button bindings, and dashboard layouts to map control of lifts, clamps, and intake pods across dual gamepads.'
-                },
-                { 
-                  name: 'Community Outreach Slide Deck', 
-                  icon: Users, 
-                  desc: 'Outreach workshop slides, robotics demo booklets, and safety sheets prepared for middle school STEM labs.',
-                  isTool: false,
-                  target: '#outreach',
-                  cta: 'OPEN SLIDE DECK',
-                  details: 'Visual slides used by Team Vortex during local school outreach campaigns to demystify FTC engineering processes, programming structures, and invite new members.'
-                },
-                { 
-                  name: 'Sponsorship Pitch Toolkit', 
-                  icon: Handshake, 
-                  desc: 'The official visual presentations shared during business sponsor evaluations showcasing resource budgeting.',
-                  isTool: false,
-                  target: '#sponsorship',
-                  cta: 'LOAD TOOLKIT',
-                  details: 'Our sponsorship pitch presentation detailing the team seasonal budget, visual milestones, technical challenges, and community exposure opportunities.'
                 }
               ];
 
