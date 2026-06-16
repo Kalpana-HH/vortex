@@ -1654,14 +1654,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans flex flex-col justify-between selection:bg-[var(--accent)]/30 selection:text-[var(--accent)] transition-all duration-300">
       
-      {/* Smooth Scroll Progress Indicator Bar using Hardware-Accelerated Springs */}
-      <motion.div 
-        className="fixed top-0 left-0 h-1 w-full bg-[var(--accent)] z-[100] shadow-[0_1px_8px_rgba(0,240,255,0.4)]"
-        style={{ transformOrigin: "left", originX: 0 }}
-        animate={{ scaleX: scrollProgress / 100 }}
-        transition={{ type: "spring", stiffness: 100, damping: 20, mass: 0.2 }}
-        id="scroll-progress-bar"
-      />
+
 
       {/* Dynamic Style Injection representing the live color palette options and cursor glow styles */}
       <style>{`
