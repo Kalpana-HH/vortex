@@ -4,6 +4,7 @@ import {
   Plus, Trash2, Settings, Sliders, Eye, Save, 
   Check, FileCode, Sparkles, Move, Info, ChevronRight
 } from 'lucide-react';
+import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface Point2D {
   x: number; // inches, -72 to 72
@@ -126,8 +127,20 @@ const PRESET_PATH_GROUPS: PresetGroup[] = [
   }
 ];
 
-export default function PathSimulator() {
-  const [segments, setSegments] = useState<PathSegment[]>(DEFAULT_SEGMENTS);
+interface PathSimulatorProps {
+  db?: any;
+  currentUser?: any;
+}
+
+export default function PathSimulator({ db, currentUser }: PathSimulatorProps) {
+  const [segments, setSegments] = useState<PathSegment[]>(() => {
+    try {
+      const saved = localStorage.getItem('vortex_custom_paths');
+      return saved ? JSON.parse(saved) : DEFAULT_SEGMENTS;
+    } catch {
+      return DEFAULT_SEGMENTS;
+    }
+  });
   const [selectedSegmentId, setSelectedSegmentId] = useState<string>('seg-1');
   const [activePresetIndex, setActivePresetIndex] = useState<number | null>(null);
   
@@ -151,19 +164,40 @@ export default function PathSimulator() {
   const selectedSegmentIndex = segments.findIndex(s => s.id === selectedSegmentId);
   const activeSegment = segments[selectedSegmentIndex] || segments[0];
 
-  // Load custom saved paths on mount
+  // Sync real-time database changes from other devices
   useEffect(() => {
-    const saved = localStorage.getItem('vortex_custom_paths');
-    if (saved) {
-      try {
-        setSegments(JSON.parse(saved));
-      } catch (e) {}
-    }
-  }, []);
+    if (!db) return;
+    const unsubscribe = onSnapshot(doc(db, "custom_data", "paths"), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && Array.isArray(data.items)) {
+          setSegments(data.items);
+          localStorage.setItem('vortex_custom_paths', JSON.stringify(data.items));
+        }
+      }
+    }, (error) => {
+      console.warn("Paths Cloud Sync inactive (read fallback active):", error);
+    });
+    return () => unsubscribe();
+  }, [db]);
 
-  // Sync to localstorage
-  const saveToLocalStorage = (data: PathSegment[]) => {
+  // Sync to localstorage and Firestore
+  const saveToLocalStorage = async (data: PathSegment[]) => {
     localStorage.setItem('vortex_custom_paths', JSON.stringify(data));
+    if (db) {
+      const userEmailLower = currentUser?.email?.toLowerCase();
+      const isAdminEmail = !!(currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com"));
+      if (isAdminEmail) {
+        try {
+          await setDoc(doc(db, "custom_data", "paths"), {
+            items: data,
+            updatedAt: serverTimestamp()
+          });
+        } catch (e) {
+          console.error("Failed to sync paths directly to Firestore:", e);
+        }
+      }
+    }
   };
 
   // Bezier coordinate computations
@@ -474,7 +508,7 @@ export default function PathSimulator() {
     setActivePresetIndex(null);
     setAnimationTime(0);
     setAnimSegmentIndex(0);
-    localStorage.removeItem('vortex_custom_paths');
+    saveToLocalStorage(DEFAULT_SEGMENTS);
   };
 
   return (

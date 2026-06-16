@@ -61,10 +61,19 @@ const PRESETS = [
   }
 ];
 
-export default function COMCalculator() {
+interface COMCalculatorProps {
+  db?: any;
+  currentUser?: any;
+}
+
+export default function COMCalculator({ db, currentUser }: COMCalculatorProps) {
   const [components, setComponents] = useState<RobotComponent[]>(() => {
-    const saved = localStorage.getItem('vortex_com_components');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('vortex_com_components');
+      return saved ? JSON.parse(saved) : DEFAULT_COMPONENTS;
+    } catch {
+      return DEFAULT_COMPONENTS;
+    }
   });
 
   const [activePresetIndex, setActivePresetIndex] = useState<number>(-1);
@@ -77,10 +86,44 @@ export default function COMCalculator() {
   const [y, setY] = useState<string | number>('');
   const [z, setZ] = useState<string | number>('');
 
-  // Save changes to localStorage
+  // Sync real-time database changes from other devices
   useEffect(() => {
-    localStorage.setItem('vortex_com_components', JSON.stringify(components));
-  }, [components]);
+    if (!db) return;
+    const unsubscribe = onSnapshot(doc(db, "custom_data", "com"), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && Array.isArray(data.items)) {
+          setComponents(data.items);
+          localStorage.setItem('vortex_com_components', JSON.stringify(data.items));
+        }
+      }
+    }, (error) => {
+      console.warn("COM Cloud Sync inactive (read fallback active):", error);
+    });
+    return () => unsubscribe();
+  }, [db]);
+
+  // Sync back to database
+  const updateCOMList = async (newItems: RobotComponent[]) => {
+    setComponents(newItems);
+    localStorage.setItem('vortex_com_components', JSON.stringify(newItems));
+    if (db) {
+      const userEmailLower = currentUser?.email?.toLowerCase();
+      const isAdminEmail = !!(currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com"));
+      if (isAdminEmail) {
+        try {
+          await setDoc(doc(db, "custom_data", "com"), {
+            items: newItems,
+            updatedAt: serverTimestamp()
+          });
+        } catch (e) {
+          console.error("Failed to sync COM coordinates directly to Firestore:", e);
+        }
+      } else {
+        alert("⚠️ Local Only Mode: Change saved locally. Click 'Sync with Google' on the bottom black CMS toolbar and log in as an authorized admin to synchronize changes to other devices immediately.");
+      }
+    }
+  };
 
   const handleAddComponent = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +149,7 @@ export default function COMCalculator() {
       zMm: valZ
     };
 
-    setComponents(prev => [...prev, newComponent]);
+    updateCOMList([...components, newComponent]);
     setName('');
     setWeight('');
     setX('');
@@ -115,21 +158,22 @@ export default function COMCalculator() {
   };
 
   const handleDeleteComponent = (id: string) => {
-    setComponents(prev => prev.filter(c => c.id !== id));
+    const updated = components.filter(c => c.id !== id);
+    updateCOMList(updated);
   };
 
   const handleLoadPreset = (index: number) => {
-    setComponents(PRESETS[index].components);
+    updateCOMList(PRESETS[index].components);
     setActivePresetIndex(index);
   };
 
   const handleResetDefaults = () => {
-    setComponents(DEFAULT_COMPONENTS);
+    updateCOMList(DEFAULT_COMPONENTS);
     setActivePresetIndex(0);
   };
 
   const handleClearAll = () => {
-    setComponents([]);
+    updateCOMList([]);
     setActivePresetIndex(-1);
   };
 

@@ -786,8 +786,9 @@ export default function App() {
     setGallery(newGallery);
     localStorage.setItem('vortex_custom_gallery', JSON.stringify(newGallery));
     if (db) {
-      const userEmailLower = currentUser?.email?.toLowerCase();
-      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+      const activeUser = auth?.currentUser || currentUser;
+      const userEmailLower = activeUser?.email?.toLowerCase();
+      const isAdminEmail = !!(activeUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com"));
       if (isAdminEmail) {
         try {
           await setDoc(doc(db, "custom_data", "gallery"), {
@@ -797,6 +798,8 @@ export default function App() {
         } catch (e) {
           console.error("Failed to sync gallery to Firestore:", e);
         }
+      } else {
+        alert("⚠️ Local Only Mode: You are editing locally. To make these gallery cards visible on other devices immediately, please click the 'Sync with Google' button on the bottom black toolbar and log in as an administrator.");
       }
     }
   };
@@ -805,8 +808,9 @@ export default function App() {
     setSponsorsState(newSponsors);
     localStorage.setItem('vortex_custom_sponsors', JSON.stringify(newSponsors));
     if (db) {
-      const userEmailLower = currentUser?.email?.toLowerCase();
-      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+      const activeUser = auth?.currentUser || currentUser;
+      const userEmailLower = activeUser?.email?.toLowerCase();
+      const isAdminEmail = !!(activeUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com"));
       if (isAdminEmail) {
         try {
           await setDoc(doc(db, "custom_data", "sponsors"), {
@@ -816,6 +820,8 @@ export default function App() {
         } catch (e) {
           console.error("Failed to sync sponsors to Firestore:", e);
         }
+      } else {
+        alert("⚠️ Local Only Mode: You are editing locally. To make these sponsor cards visible on other devices immediately, please click the 'Sync with Google' button on the bottom black toolbar and log in as an administrator.");
       }
     }
   };
@@ -824,8 +830,9 @@ export default function App() {
     setRoster(newRoster);
     localStorage.setItem('vortex_custom_roster', JSON.stringify(newRoster));
     if (db) {
-      const userEmailLower = currentUser?.email?.toLowerCase();
-      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+      const activeUser = auth?.currentUser || currentUser;
+      const userEmailLower = activeUser?.email?.toLowerCase();
+      const isAdminEmail = !!(activeUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com"));
       if (isAdminEmail) {
         try {
           await setDoc(doc(db, "custom_data", "roster"), {
@@ -835,6 +842,8 @@ export default function App() {
         } catch (e) {
           console.error("Failed to sync roster to Firestore:", e);
         }
+      } else {
+        alert("⚠️ Local Only Mode: You are editing locally. To make these roster cards visible on other devices immediately, please click the 'Sync with Google' button on the bottom black toolbar and log in as an administrator.");
       }
     }
   };
@@ -843,8 +852,9 @@ export default function App() {
     setPedroPathing(newItems);
     localStorage.setItem('vortex_custom_pedro_pathing', JSON.stringify(newItems));
     if (db) {
-      const userEmailLower = currentUser?.email?.toLowerCase();
-      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+      const activeUser = auth?.currentUser || currentUser;
+      const userEmailLower = activeUser?.email?.toLowerCase();
+      const isAdminEmail = !!(activeUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com"));
       if (isAdminEmail) {
         try {
           await setDoc(doc(db, "custom_data", "pedro_pathing"), {
@@ -854,6 +864,8 @@ export default function App() {
         } catch (e) {
           console.error("Failed to sync pedro_pathing to Firestore:", e);
         }
+      } else {
+        alert("⚠️ Local Only Mode: You are editing locally. To make these trajectory spec cards visible on other devices immediately, please click the 'Sync with Google' button on the bottom black toolbar and log in as an administrator.");
       }
     }
   };
@@ -862,8 +874,9 @@ export default function App() {
     setSharedAssets(newItems);
     localStorage.setItem('vortex_custom_shared_assets', JSON.stringify(newItems));
     if (db) {
-      const userEmailLower = currentUser?.email?.toLowerCase();
-      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+      const activeUser = auth?.currentUser || currentUser;
+      const userEmailLower = activeUser?.email?.toLowerCase();
+      const isAdminEmail = !!(activeUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com"));
       if (isAdminEmail) {
         try {
           await setDoc(doc(db, "custom_data", "shared_assets"), {
@@ -873,6 +886,8 @@ export default function App() {
         } catch (e) {
           console.error("Failed to sync shared_assets to Firestore:", e);
         }
+      } else {
+        alert("⚠️ Local Only Mode: You are editing locally. To make these interactive tool cards visible on other devices immediately, please click the 'Sync with Google' button on the bottom black toolbar and log in as an administrator.");
       }
     }
   };
@@ -3787,7 +3802,7 @@ export default function App() {
 
         {/* Render BOM Manager segment */}
         {activePage === 'bom' && (
-          <BOMManager />
+          <BOMManager db={db} currentUser={currentUser} />
         )}
 
         {/* Render Path Simulator segment */}
@@ -3812,13 +3827,13 @@ export default function App() {
                 Design multi-segment cubic bezier paths for First Tech Challenge. Drag handles, edit headings, run simulations, and copy ready-to-use follower code.
               </p>
             </div>
-            <PathSimulator />
+            <PathSimulator db={db} currentUser={currentUser} />
           </div>
         )}
 
         {/* Render COM Calculator segment */}
         {activePage === 'com-calc' && (
-          <COMCalculator />
+          <COMCalculator db={db} currentUser={currentUser} />
         )}
 
         {/* Render Portfolios Center segment */}

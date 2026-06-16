@@ -4,6 +4,7 @@ import {
   DollarSign, Package, ShoppingCart, Tag, ExternalLink, 
   AlertCircle, ChevronDown, CheckCircle, Clock, Calendar, AlertTriangle
 } from 'lucide-react';
+import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface BOMItem {
   id: string;
@@ -30,10 +31,19 @@ const DEFAULT_BOM: BOMItem[] = [
   { id: '10', name: 'Fasteners & Spacers Multipack', category: 'Fasteners', supplier: 'McMASTER-CARR', partNumber: '91292A110', quantity: 3, unitPrice: 29.95, status: 'Arrived', notes: 'M4 steel hex screws and nylon spacers.' }
 ];
 
-export default function BOMManager() {
+interface BOMManagerProps {
+  db?: any;
+  currentUser?: any;
+}
+
+export default function BOMManager({ db, currentUser }: BOMManagerProps) {
   const [items, setItems] = useState<BOMItem[]>(() => {
-    const saved = localStorage.getItem('vortex_bom');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('vortex_bom');
+      return saved ? JSON.parse(saved) : DEFAULT_BOM;
+    } catch {
+      return DEFAULT_BOM;
+    }
   });
 
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -54,10 +64,44 @@ export default function BOMManager() {
   const [formStatus, setFormStatus] = useState<BOMItem['status']>('Planned');
   const [formNotes, setFormNotes] = useState('');
 
-  // Persist to localstorage on change
+  // Sync real-time database changes from other devices
   useEffect(() => {
-    localStorage.setItem('vortex_bom', JSON.stringify(items));
-  }, [items]);
+    if (!db) return;
+    const unsubscribe = onSnapshot(doc(db, "custom_data", "bom"), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && Array.isArray(data.items)) {
+          setItems(data.items);
+          localStorage.setItem('vortex_bom', JSON.stringify(data.items));
+        }
+      }
+    }, (error) => {
+      console.warn("BOM cloud sync inactive (read fallback active):", error);
+    });
+    return () => unsubscribe();
+  }, [db]);
+
+  // Unified save helper that pushes to Firebase if Admin
+  const updateBOMList = async (newItems: BOMItem[]) => {
+    setItems(newItems);
+    localStorage.setItem('vortex_bom', JSON.stringify(newItems));
+    if (db) {
+      const userEmailLower = currentUser?.email?.toLowerCase();
+      const isAdminEmail = !!(currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com"));
+      if (isAdminEmail) {
+        try {
+          await setDoc(doc(db, "custom_data", "bom"), {
+            items: newItems,
+            updatedAt: serverTimestamp()
+          });
+        } catch (e) {
+          console.error("Failed to sync BOM directly to Firestore:", e);
+        }
+      } else {
+        alert("⚠️ Local Only Mode: Change saved locally. Click 'Sync with Google' on the bottom black CMS toolbar and log in as an authorized admin to synchronize changes to other devices immediately.");
+      }
+    }
+  };
 
   const resetForm = () => {
     setFormName('');
@@ -91,7 +135,7 @@ export default function BOMManager() {
       notes: formNotes.trim()
     };
 
-    setItems(prev => [newItem, ...prev]);
+    updateBOMList([newItem, ...items]);
     resetForm();
   };
 
@@ -115,7 +159,7 @@ export default function BOMManager() {
     const parsedQty = typeof formQuantity === 'number' ? formQuantity : parseInt(formQuantity);
     const parsedPrice = typeof formUnitPrice === 'number' ? formUnitPrice : parseFloat(formUnitPrice);
 
-    setItems(prev => prev.map(item => {
+    const updated = items.map(item => {
       if (item.id === editingId) {
         return {
           ...item,
@@ -130,21 +174,23 @@ export default function BOMManager() {
         };
       }
       return item;
-    }));
+    });
 
+    updateBOMList(updated);
     resetForm();
   };
 
   const handleDelete = (id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+    const updated = items.filter(item => item.id !== id);
+    updateBOMList(updated);
   };
 
   const handleResetDefaults = () => {
-    setItems(DEFAULT_BOM);
+    updateBOMList(DEFAULT_BOM);
   };
 
   const handleClearAll = () => {
-    setItems([]);
+    updateBOMList([]);
   };
 
   // Mathematical statistical aggregations
