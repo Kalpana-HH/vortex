@@ -71,7 +71,7 @@ export default function BlogCatalog() {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${
+              className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
                 selectedCategory === cat
                   ? 'bg-cyan-600 text-white shadow-sm dark:bg-cyan-500'
                   : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-200'
@@ -179,7 +179,7 @@ export default function BlogCatalog() {
               </div>
               <button
                 onClick={() => setSelectedPost(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-850 dark:text-slate-400 dark:hover:bg-slate-800"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-850 dark:text-slate-400 dark:hover:bg-slate-800"
                 id="blog-modal-close"
               >
                 <X className="h-4 w-4" />

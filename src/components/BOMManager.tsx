@@ -219,7 +219,7 @@ export default function BOMManager() {
         <div className="flex flex-wrap gap-2.5">
           <button 
             onClick={handleResetDefaults}
-            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-bold uppercase text-[var(--text-secondary)] hover:bg-[var(--accent)]/5 hover:text-[var(--text-primary)] transition"
+            className="flex items-center gap-1.5 rounded-full border border-[var(--border)] px-3 py-2 text-xs font-bold uppercase text-[var(--text-secondary)] hover:bg-[var(--accent)]/5 hover:text-[var(--text-primary)] transition"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             <span>Load Default Parts</span>
@@ -227,7 +227,7 @@ export default function BOMManager() {
 
           <button 
             onClick={handleClearAll}
-            className="flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-2 text-xs font-bold uppercase text-red-400 hover:bg-red-500/10 transition"
+            className="flex items-center gap-1.5 rounded-full border border-red-500/30 px-3 py-2 text-xs font-bold uppercase text-red-400 hover:bg-red-500/10 transition"
           >
             <Trash2 className="h-3.5 w-3.5" />
             <span>Clear All</span>
@@ -235,7 +235,7 @@ export default function BOMManager() {
           
           <button 
             onClick={exportCSV}
-            className="flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3.5 py-2 text-xs font-bold uppercase text-[var(--btn-text)] hover:opacity-90 transition shadow-sm"
+            className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-3.5 py-2 text-xs font-bold uppercase text-[var(--btn-text)] hover:opacity-90 transition shadow-sm"
           >
             <Download className="h-3.5 w-3.5" />
             <span>Export CSV</span>
@@ -482,7 +482,7 @@ export default function BOMManager() {
                   resetForm();
                   setIsAdding(true);
                 }}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-xs font-bold text-[var(--btn-text)] hover:opacity-90 transition active:scale-97 cursor-pointer"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--accent)] text-xs font-bold text-[var(--btn-text)] hover:opacity-90 transition active:scale-97 cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Add Part</span>
@@ -505,7 +505,7 @@ export default function BOMManager() {
               <button 
                 type="button" 
                 onClick={resetForm}
-                className="p-1 text-[var(--text-secondary)] hover:text-rose-500 rounded-md transition"
+                className="p-1 text-[var(--text-secondary)] hover:text-rose-500 rounded-full transition"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -618,13 +618,13 @@ export default function BOMManager() {
               <button 
                 type="button" 
                 onClick={resetForm}
-                className="px-4 py-2 border border-[var(--border)] text-xs font-bold uppercase rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-primary)]"
+                className="px-4 py-2 border border-[var(--border)] text-xs font-bold uppercase rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-primary)]"
               >
                 Cancel
               </button>
               <button 
                 type="submit"
-                className="px-5 py-2 bg-[var(--accent)] text-xs font-bold uppercase text-[var(--btn-text)] rounded-lg hover:opacity-90 transition shadow-sm cursor-pointer"
+                className="px-5 py-2 bg-[var(--accent)] text-xs font-bold uppercase text-[var(--btn-text)] rounded-full hover:opacity-90 transition shadow-sm cursor-pointer"
               >
                 {editingId ? 'Modify Record' : 'Record Component'}
               </button>
@@ -731,14 +731,14 @@ export default function BOMManager() {
                         <div className="flex items-center justify-center gap-2">
                           <button 
                             onClick={() => handleStartEdit(item)}
-                            className="p-1 rounded bg-[var(--bg-primary)] border border-[var(--border)] hover:border-cyan-500 hover:text-cyan-400 text-slate-500 transition"
+                            className="p-1 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] hover:border-cyan-500 hover:text-cyan-400 text-slate-500 transition"
                             title="Edit Record"
                           >
                             <Edit2 className="h-3 w-3" />
                           </button>
                           <button 
                             onClick={() => handleDelete(item.id)}
-                            className="p-1 rounded bg-[var(--bg-primary)] border border-[var(--border)] hover:border-rose-500 hover:text-rose-500 text-slate-500 transition"
+                            className="p-1 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] hover:border-rose-500 hover:text-rose-500 text-slate-500 transition"
                             title="Delete Record"
                           >
                             <Trash2 className="h-3 w-3" />

@@ -790,7 +790,7 @@ export default function PathSimulator() {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className={`h-9 px-4 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`h-9 px-4 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                     isPlaying 
                       ? 'bg-amber-500 text-black hover:brightness-105' 
                       : 'bg-[var(--accent)] text-black hover:brightness-105'
@@ -814,7 +814,7 @@ export default function PathSimulator() {
                     setAnimSegmentIndex(0);
                     setIsPlaying(false);
                   }}
-                  className="h-9 w-9 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent)]/5 flex items-center justify-center transition cursor-pointer"
+                  className="h-9 w-9 rounded-full border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent)]/5 flex items-center justify-center transition cursor-pointer"
                   title="Reset simulation step"
                 >
                   <RotateCcw className="h-4 w-4" />
@@ -828,7 +828,7 @@ export default function PathSimulator() {
                   <button
                     key={sp}
                     onClick={() => setPlaySpeed(sp)}
-                    className={`text-[10px] font-mono px-2 py-1 rounded font-black cursor-pointer uppercase ${
+                    className={`text-[10px] font-mono px-2 py-1 rounded-full font-black cursor-pointer uppercase ${
                       playSpeed === sp 
                         ? 'bg-[var(--accent)] text-black' 
                         : 'text-stone-400 hover:text-stone-200'
@@ -877,7 +877,7 @@ export default function PathSimulator() {
                         e.stopPropagation();
                         handleDeleteSegment(seg.id);
                       }}
-                      className="text-stone-500 hover:text-rose-500 p-1.5 rounded-lg border border-transparent hover:border-stone-800 hover:bg-stone-900 cursor-pointer"
+                      className="text-stone-500 hover:text-rose-500 p-1.5 rounded-full border border-transparent hover:border-stone-800 hover:bg-stone-900 cursor-pointer"
                       title="Remove segment"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -889,7 +889,7 @@ export default function PathSimulator() {
 
             <button
               onClick={handleAddSegment}
-              className="mt-2 w-full h-9 rounded-xl border border-dashed border-[var(--border)] text-xs font-black uppercase text-[var(--accent)] hover:border-[var(--accent)] hover:bg-[var(--accent)]/5 transition flex items-center justify-center gap-1.5 cursor-pointer"
+              className="mt-2 w-full h-9 rounded-full border border-dashed border-[var(--border)] text-xs font-black uppercase text-[var(--accent)] hover:border-[var(--accent)] hover:bg-[var(--accent)]/5 transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Plus className="h-4 w-4" /> Add Next Spline Connection
             </button>
@@ -907,7 +907,7 @@ export default function PathSimulator() {
                   <button
                     key={deg}
                     onClick={() => handleUpdateSegment({ type: deg as any })}
-                    className={`py-1.5 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer ${
+                    className={`py-1.5 rounded-full text-[9px] font-black uppercase transition-all cursor-pointer ${
                       activeSegment.type === deg 
                         ? 'bg-[var(--accent)] text-black' 
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -927,7 +927,7 @@ export default function PathSimulator() {
                   <button
                     key={rule}
                     onClick={() => handleUpdateSegment({ headingRule: rule as any })}
-                    className={`py-1.5 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer ${
+                    className={`py-1.5 rounded-full text-[9px] font-black uppercase transition-all cursor-pointer ${
                       activeSegment.headingRule === rule 
                         ? 'bg-[var(--accent)] text-black' 
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -1132,7 +1132,7 @@ export default function PathSimulator() {
           </div>
           <button
             onClick={handleCopyCode}
-            className="h-9 px-4 rounded-lg bg-[var(--accent)] text-black font-mono text-[10px] font-black uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 self-start cursor-pointer"
+            className="h-9 px-4 rounded-full bg-[var(--accent)] text-black font-mono text-[10px] font-black uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 self-start cursor-pointer"
           >
             {copiedText ? (
               <>

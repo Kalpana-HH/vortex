@@ -114,7 +114,7 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
                   }
                   setIsEditing(!isEditing);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black border border-[var(--accent)]/20 transition-all duration-200 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black border border-[var(--accent)]/20 transition-all duration-200 cursor-pointer"
                 id="btn-edit-target"
                 title="Configure countdown"
               >
@@ -184,13 +184,13 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer"
+                  className="rounded-full border border-[var(--border)] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer"
                 >
                   Discard
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-[var(--accent)] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-[var(--btn-text)] hover:opacity-90 active:scale-95 transition-all outline-none cursor-pointer"
+                  className="rounded-full bg-[var(--accent)] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-[var(--btn-text)] hover:opacity-90 active:scale-95 transition-all outline-none cursor-pointer"
                   id="submit-countdown-date"
                 >
                   Save Active Target

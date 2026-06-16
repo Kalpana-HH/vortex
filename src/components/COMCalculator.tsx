@@ -206,7 +206,7 @@ export default function COMCalculator() {
         <div className="flex flex-wrap gap-2.5">
           <button 
             onClick={handleResetDefaults}
-            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3.5 py-2 text-xs font-bold uppercase text-[var(--text-secondary)] hover:bg-[var(--accent)]/5 hover:text-[var(--text-primary)] transition"
+            className="flex items-center gap-1.5 rounded-full border border-[var(--border)] px-3.5 py-2 text-xs font-bold uppercase text-[var(--text-secondary)] hover:bg-[var(--accent)]/5 hover:text-[var(--text-primary)] transition"
           >
             <RotateCcw className="h-4 w-4" />
             <span>Load Default Stock</span>
@@ -214,7 +214,7 @@ export default function COMCalculator() {
 
           <button 
             onClick={handleClearAll}
-            className="flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3.5 py-2 text-xs font-bold uppercase text-red-400 hover:bg-red-500/10 transition"
+            className="flex items-center gap-1.5 rounded-full border border-red-500/30 px-3.5 py-2 text-xs font-bold uppercase text-red-400 hover:bg-red-500/10 transition"
           >
             <Trash2 className="h-4 w-4" />
             <span>Clear All</span>
@@ -539,7 +539,7 @@ export default function COMCalculator() {
 
               <button 
                 type="submit"
-                className="mt-2 w-full text-center rounded-lg py-2.5 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 active:scale-98 transition duration-150 cursor-pointer shadow-sm"
+                className="mt-2 w-full text-center rounded-full py-2.5 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 active:scale-98 transition duration-150 cursor-pointer shadow-sm"
               >
                 Insert Part into Physics Model
               </button>
@@ -585,7 +585,7 @@ export default function COMCalculator() {
                       <div className="flex items-center justify-center">
                         <button 
                           onClick={() => handleDeleteComponent(comp.id)}
-                          className="p-1 rounded bg-[var(--bg-primary)] border border-[var(--border)] hover:border-rose-500 hover:text-rose-500 text-slate-500 transition"
+                          className="p-1 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] hover:border-rose-500 hover:text-rose-500 text-slate-500 transition"
                           title="Remove Component"
                         >
                           <Trash2 className="h-3 w-3" />

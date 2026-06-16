@@ -84,7 +84,7 @@ export default function ResourcesCatalog() {
                 setActiveCategory(cat);
                 setSelectedResource(null);
               }}
-              className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
+              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
                 activeCategory === cat
                   ? 'bg-indigo-600 text-white shadow-sm dark:bg-cyan-500'
                   : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-200'
@@ -235,7 +235,7 @@ export default function ResourcesCatalog() {
                       </span>
                       <button
                         onClick={() => handleCopyCode(selectedResource.id, selectedResource.codeSnippet!)}
-                        className="flex items-center gap-1 rounded bg-slate-100 hover:bg-slate-200 px-2.5 py-1 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition"
+                        className="flex items-center gap-1 rounded-full bg-slate-100 hover:bg-slate-200 px-2.5 py-1 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition"
                         title="Copy code blueprint to clipboard"
                         id={`btn-copy-code-${selectedResource.id}`}
                       >

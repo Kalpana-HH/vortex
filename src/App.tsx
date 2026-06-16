@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw, CheckCircle, Lock, Unlock, LogIn, LogOut, CheckCircle2, Search, Edit } from 'lucide-react';
+import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw, CheckCircle, Lock, Unlock, LogIn, LogOut, CheckCircle2, Search, Edit, Plus, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { teamMembers } from './data/team';
 import BOMManager from './components/BOMManager';
@@ -197,11 +197,19 @@ const collageRow1 = [...galleryItems, ...galleryItems, ...galleryItems];
 const collageRow2 = [...galleryItems, ...galleryItems, ...galleryItems].reverse();
 
 // Interactive Gallery View Component with Lightbox popup
-const GalleryPageView = () => {
-  const [activeTab, setActiveTab] = useState<'ALL' | 'MECHANICAL' | 'ELECTRONICS' | 'CAD' | 'WORKSHOPS'>('ALL');
-  const [zoomedImage, setZoomedImage] = useState<typeof galleryItems[0] | null>(null);
+interface GalleryPageViewProps {
+  isUnlocked: boolean;
+  gallery: any[];
+  onAdd: () => void;
+  onEdit: (item: any) => void;
+  onDelete: (id: any) => void;
+}
 
-  const filteredItems = galleryItems.filter(item => {
+const GalleryPageView = ({ isUnlocked, gallery, onAdd, onEdit, onDelete }: GalleryPageViewProps) => {
+  const [activeTab, setActiveTab] = useState<'ALL' | 'MECHANICAL' | 'ELECTRONICS' | 'CAD' | 'WORKSHOPS'>('ALL');
+  const [zoomedImage, setZoomedImage] = useState<any | null>(null);
+
+  const filteredItems = gallery.filter(item => {
     if (activeTab === 'ALL') return true;
     if (activeTab === 'CAD') return item.category === 'CAD MODELS';
     return item.category === activeTab;
@@ -211,12 +219,22 @@ const GalleryPageView = () => {
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 flex flex-col gap-12" id="gallery-page-view">
       
       {/* Title Header */}
-      <div className="border-b border-[var(--border)] pb-6 text-left flex flex-col gap-2">
-        <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Visual Showcase</span>
-        <h2 className="text-3xl font-extrabold text-[var(--text-primary)] uppercase">Media Gallery</h2>
-        <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-xl">
-          Visual documentation of our rookie workspaces, initial high-precision CAD architectures, and mechanical layouts as we prepare to embark on our very first season.
-        </p>
+      <div className="border-b border-[var(--border)] pb-6 text-left flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Visual Showcase</span>
+          <h2 className="text-3xl font-extrabold text-[var(--text-primary)] uppercase">Media Gallery</h2>
+          <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-xl">
+            Visual documentation of our rookie workspaces, initial high-precision CAD architectures, and mechanical layouts as we prepare to embark on our very first season.
+          </p>
+        </div>
+        {isUnlocked && (
+          <button
+            onClick={onAdd}
+            className="rounded-full bg-[var(--accent)] text-black text-xs font-bold uppercase tracking-wider px-5 py-2.5 hover:opacity-90 active:scale-[0.98] transition flex items-center justify-center gap-1.5 cursor-pointer self-start md:self-auto shrink-0"
+          >
+            <Plus className="h-4 w-4" /> Add Image
+          </button>
+        )}
       </div>
 
       {/* Categories Toolbar Filter Row */}
@@ -225,7 +243,7 @@ const GalleryPageView = () => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition duration-150 cursor-pointer ${
+            className={`px-4 py-2 rounded-full text-xs font-bold uppercase transition duration-150 cursor-pointer ${
               activeTab === tab 
                 ? 'bg-[var(--accent)] text-[var(--btn-text)] shadow-sm' 
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent)]/5 border border-[var(--border)]/40'
@@ -242,8 +260,26 @@ const GalleryPageView = () => {
           <div 
             key={item.id}
             onClick={() => setZoomedImage(item)}
-            className="group bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl overflow-hidden cursor-pointer hover:border-[var(--accent)]/50 transition-all duration-300 hover:shadow-lg flex flex-col h-full text-left"
+            className="group bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl overflow-hidden cursor-pointer hover:border-[var(--accent)]/50 transition-all duration-300 hover:shadow-lg flex flex-col h-full text-left relative"
           >
+            {isUnlocked && (
+              <div className="absolute top-3 right-3 z-20 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => onEdit(item)}
+                  className="p-1.5 rounded-full bg-black/75 hover:bg-[var(--accent)] text-[var(--text-primary)] hover:text-black border border-white/10 hover:border-transparent transition cursor-pointer shadow-md"
+                  title="Edit Image Details"
+                >
+                  <Edit className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => onDelete(item.id)}
+                  className="p-1.5 rounded-full bg-black/75 hover:bg-red-600 text-[var(--text-primary)] hover:text-white border border-white/10 hover:border-transparent transition cursor-pointer shadow-md"
+                  title="Remove from Gallery"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
             {/* Image hover slot */}
             <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--bg-primary)] border-b border-[var(--border)]">
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
@@ -567,6 +603,210 @@ const saveAllTextNodes = () => {
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageID>('home');
+
+  // Dynamic admin lists backed by LocalStorage with original constants as static fallbacks
+  const [gallery, setGallery] = useState(() => {
+    try {
+      const saved = localStorage.getItem('vortex_custom_gallery');
+      return saved ? JSON.parse(saved) : galleryItems;
+    } catch {
+      return galleryItems;
+    }
+  });
+
+  const [sponsorsState, setSponsorsState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('vortex_custom_sponsors');
+      return saved ? JSON.parse(saved) : sponsorLogos;
+    } catch {
+      return sponsorLogos;
+    }
+  });
+
+  const [roster, setRoster] = useState(() => {
+    try {
+      const saved = localStorage.getItem('vortex_custom_roster');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    // Merge staff/mentors list with students as default
+    const mentorsList = [
+      {
+        id: 'm1',
+        name: 'Coach Elena Rostova',
+        role: 'Lead Technical Mentor',
+        department: 'Mentors',
+        bio: 'With over 10 years of aerospace engineering experience, Elena teaches Vortex structural math, electrical safety, and industrial CAD standards.',
+        favTool: 'Vernier Calipers & Torque Wrench',
+        favComponent: 'Planetary Gearboxes',
+        quote: 'Measure twice, cut once, document always.',
+        yearsExperience: 8
+      },
+      {
+        id: 'm2',
+        name: 'Dr. Arthur Pendleton',
+        role: 'Control Theory Consultant',
+        department: 'Mentors',
+        bio: 'Arthur is an associate professor of engineering who guides our developers on advanced sensor fusion matrices and smooth acceleration pathing curves.',
+        favTool: 'Sensor Probes',
+        favComponent: 'Bosch BNO055 IMU',
+        quote: 'Acceleration is continuous, control must be active.',
+        yearsExperience: 5
+      },
+      {
+        id: 'm3',
+        name: 'Sarah Vance',
+        role: 'Sponsorship & Outreach Advisor',
+        department: 'Mentors',
+        bio: 'Sarah coaches the design team on budgeting, industry partner presentations, public speaking, and building a sustainable high school robotics brand.',
+        favTool: 'Sponsorship Pitch Deck',
+        favComponent: 'Engineering Portfolio',
+        quote: 'Robotics is an enterprise, treat it like one.',
+        yearsExperience: 4
+      },
+      {
+        id: 'm4',
+        name: 'Marcus Chen',
+        role: 'Manufacturing & Machining Mentor',
+        department: 'Mentors',
+        bio: 'A veteran machinist and shop owner who teaches safe operation of CNC routers, manual lathe operations, and close-tolerance chassis fabrication.',
+        favTool: 'CNC Mill',
+        favComponent: 'Custom Solid Billet Chassis',
+        quote: 'Friction is the enemy, precision is the antidote.',
+        yearsExperience: 6
+      },
+      {
+        id: 'm5',
+        name: 'Dr. Lisa Sterling',
+        role: 'Software & Logic Advisor',
+        department: 'Mentors',
+        bio: 'A research systems software architect who guides the programming sub-division in thread-safe multi-threading, custom telemetry loops, and vision processing filters.',
+        favTool: 'Debugger',
+        favComponent: 'Intel RealSense depth camera',
+        quote: 'Threads are parallel, logic is singular.',
+        yearsExperience: 7
+      }
+    ];
+    return [...teamMembers, ...mentorsList];
+  });
+
+  const [pedroPathing, setPedroPathing] = useState(() => {
+    try {
+      const saved = localStorage.getItem('vortex_custom_pedro_pathing');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      { 
+        id: 1, 
+        name: 'Pedro Pathing Setup', 
+        desc: 'Core library installation script to drive Mecanum drivetrains with sub-millimeter trajectory accuracy.',
+        details: 'Setup requires importing the `pedropathing` library in Android Studio. The primary class `Follower` controls coordinate kinematics.\n\nInitialize using:\nfollower = new Follower(hardwareMap);\n\nDefine linear coefficients inside your robot configuration files to synchronize odometry track widths.',
+        cta: 'GO TO CODE GITHUB'
+      },
+      { 
+        id: 7, 
+        name: 'Braking Distance Optimizer', 
+        desc: 'Configure motor voltage braking routines to stop precisely in front of high-junction grids.',
+        details: 'Determines ideal deceleration triggers based on immediate distance remaining, actively stopping the robot weight within 15 milliseconds of reaching target layout.',
+        cta: 'OPTIMIZER TESTER'
+      },
+      { 
+        id: 8, 
+        name: 'Error Tolerance Modifier', 
+        desc: 'Adaptive feedback correction bounds to trigger dynamic replanning during high speed crashes.',
+        details: 'Triggers dynamic local spline replanning if the translation error gets larger than 2.0 inches, bypassing physical chassis collisions with opponent robots.',
+        cta: 'TRIGGER MODIFIERS'
+      },
+      { 
+        id: 9, 
+        name: 'Telemetry Log Dump', 
+        desc: 'Store local debugging coordinate arrays directly within the REV Control Hub flash modules.',
+        details: 'Logs timestamps (t), actual coordinates (x, y, Theta), target coordinates, loop-time frequencies (Hz), and battery voltage directly to local CSV arrays for playback.',
+        cta: 'DUMP LOG DATA'
+      },
+      { 
+        id: 10, 
+        name: 'Sensor Fusion Matrix', 
+        desc: 'Incorporate Pinpoint hub encoders together with modern IMU gyroscopes for angle correction.',
+        details: 'Fuses high-frequency hardware odometry trackers together with the internal Bosch IMU gyroscopes using a complementary velocity filter, completely eliminating rotational drift.',
+        cta: 'FUSION ANALYSIS'
+      }
+    ];
+  });
+
+  const [sharedAssets, setSharedAssets] = useState(() => {
+    try {
+      const saved = localStorage.getItem('vortex_custom_shared_assets');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      { 
+        name: 'Dynamic Team Budget & BOM Planner', 
+        icon: 'Wrench', 
+        desc: 'Interactive parts and ledger manager. Budget structural assemblies, aluminum structures, electronics, and weights in real-time.',
+        isTool: true,
+        target: 'bom',
+        cta: 'LAUNCH PLANNER',
+        details: 'Vortex direct online Bill of Materials planner utility. Real-time cost, weight calculations, custom suppliers, priority matrices, and threshold indicators.'
+      },
+      { 
+        name: 'Center of Mass Coordinator Tool', 
+        icon: 'Cpu', 
+        desc: 'Simulate structural load points on an 18" virtual FTC-sizing bounding mesh in 3D. Predict center-of-gravity elevations.',
+        isTool: true,
+        target: 'com-calc',
+        cta: 'LAUNCH CALCULATOR',
+        details: 'Calculates overall structural centroid gravity values including height boundaries. Identifies active tipping and corner load risk metrics with a vector matrix plot.'
+      },
+      { 
+        name: 'OnShape CAD Workspace', 
+        icon: 'Box', 
+        desc: 'Complete 3D CAD modeling archive of the Vortex competition robot. Access open-source robot models, drive pods, and assemblies.',
+        isTool: false,
+        target: 'https://cad.onshape.com',
+        cta: 'OPEN WORKSPACE',
+        details: 'Our OnShape workspace contains the full parametric assemblies for the custom Mecanum chassis frame, cascading elevators, active claws, and electronics bracketry. Useful for inspecting material volumes.'
+      },
+      { 
+        name: 'Engineering Portfolio Archives', 
+        icon: 'BookOpen', 
+        desc: 'Our interactive global portfolio sharing center. Upload, browse, and filter engineering portfolios by awards won.',
+        isTool: true,
+        target: 'portfolios',
+        cta: 'LAUNCH PORTFOLIO HUB',
+        details: 'A specialized platform enabling robotics teams globally to submit and curate their engineering notebooks, filter by awards (like Inspire and Think), and browse digital A4 specifications.'
+      }
+    ];
+  });
+
+  const [adminModalType, setAdminModalType] = useState<'gallery' | 'sponsor' | 'roster' | 'resource' | null>(null);
+  const [adminModalEditId, setAdminModalEditId] = useState<any>(null);
+  const [adminModalFields, setAdminModalFields] = useState<any>({});
+
+  const updateGallery = (newGallery: any) => {
+    setGallery(newGallery);
+    localStorage.setItem('vortex_custom_gallery', JSON.stringify(newGallery));
+  };
+
+  const updateSponsors = (newSponsors: any) => {
+    setSponsorsState(newSponsors);
+    localStorage.setItem('vortex_custom_sponsors', JSON.stringify(newSponsors));
+  };
+
+  const updateRoster = (newRoster: any) => {
+    setRoster(newRoster);
+    localStorage.setItem('vortex_custom_roster', JSON.stringify(newRoster));
+  };
+
+  const updatePedroPathing = (newItems: any) => {
+    setPedroPathing(newItems);
+    localStorage.setItem('vortex_custom_pedro_pathing', JSON.stringify(newItems));
+  };
+
+  const updateSharedAssets = (newItems: any) => {
+    setSharedAssets(newItems);
+    localStorage.setItem('vortex_custom_shared_assets', JSON.stringify(newItems));
+  };
+
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [dbReplacements, setDbReplacements] = useState<Record<string, string>>(() => {
     try {
@@ -1394,13 +1634,13 @@ export default function App() {
 
   // Sponsor slideshow auto-timer
   useEffect(() => {
-    if (activePage === 'home') {
+    if (activePage === 'home' && sponsorsState.length > 0) {
       const slideInterval = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % sponsorLogos.length);
+        setCurrentSlide((prev) => (prev + 1) % sponsorsState.length);
       }, 4000);
       return () => clearInterval(slideInterval);
     }
-  }, [activePage]);
+  }, [activePage, sponsorsState.length]);
 
   // Typewriter effect for Name input placeholder
   useEffect(() => {
@@ -1909,10 +2149,10 @@ export default function App() {
                   <div className="max-h-[350px] overflow-y-auto theme-scrollover pr-1.5 flex flex-col gap-3.5 select-none">
 
                   {/* Mode Selector Option Blocks */}
-                  <div className="flex gap-2 p-1 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg mb-3">
+                  <div className="flex gap-2 p-1 bg-[var(--bg-primary)] border border-[var(--border)] rounded-full mb-3">
                     <button
                       onClick={() => setTheme('light')}
-                      className={`flex-1 py-1 text-[10px] font-bold uppercase rounded transition-all ${
+                      className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-full transition-all ${
                         theme === 'light' 
                           ? 'bg-[var(--accent)] text-[var(--btn-text)] shadow-sm' 
                           : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -1922,7 +2162,7 @@ export default function App() {
                     </button>
                     <button
                       onClick={() => setTheme('custom')}
-                      className={`flex-1 py-1 text-[10px] font-bold uppercase rounded transition-all ${
+                      className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-full transition-all ${
                         theme === 'custom' 
                           ? 'bg-[var(--accent)] text-[var(--btn-text)] shadow-sm' 
                           : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -2051,7 +2291,7 @@ export default function App() {
                               setCustomCardBg('#131338');
                               setCustomBorder('#2563eb');
                             }}
-                            className="text-[9px] font-extrabold uppercase py-1 px-1 bg-[#131338] border border-[#2563eb] text-[#00f0ff] rounded hover:opacity-90"
+                            className="text-[9px] font-extrabold uppercase py-1 px-1 bg-[#131338] border border-[#2563eb] text-[#00f0ff] rounded-full hover:opacity-90"
                           >
                             Cosmos
                           </button>
@@ -2063,7 +2303,7 @@ export default function App() {
                               setCustomCardBg('#12161a');
                               setCustomBorder('#334155');
                             }}
-                            className="text-[9px] font-extrabold uppercase py-1 px-1 bg-[#12161a] border border-zinc-700 text-[#1ed760] rounded hover:opacity-90"
+                            className="text-[9px] font-extrabold uppercase py-1 px-1 bg-[#12161a] border border-zinc-700 text-[#1ed760] rounded-full hover:opacity-90"
                           >
                             Emerald
                           </button>
@@ -2075,7 +2315,7 @@ export default function App() {
                               setCustomCardBg('#312e81');
                               setCustomBorder('#4338ca');
                             }}
-                            className="text-[9px] font-extrabold uppercase py-1 px-1 bg-[#312e81] border border-indigo-500 text-[#f5f3ff] rounded hover:opacity-90"
+                            className="text-[9px] font-extrabold uppercase py-1 px-1 bg-[#312e81] border border-indigo-500 text-[#f5f3ff] rounded-full hover:opacity-90"
                           >
                             Nebula
                           </button>
@@ -2255,7 +2495,7 @@ export default function App() {
             <div className="px-4">
               <button
                 onClick={() => navigateTo('contact')}
-                className="mt-2 w-full text-center rounded-md py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150"
+                className="mt-2 w-full text-center rounded-full py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150"
               >
                 Get In Touch
               </button>
@@ -2341,7 +2581,7 @@ export default function App() {
                 <div className="mt-8 flex flex-wrap justify-center gap-4">
                   <button 
                     onClick={() => navigateTo('team')}
-                    className="rounded-md px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150 cursor-pointer"
+                    className="rounded-full px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150 cursor-pointer"
                   >
                     Meet The Crew
                   </button>
@@ -2352,7 +2592,7 @@ export default function App() {
                         document.getElementById('sponsors-home-section')?.scrollIntoView({ behavior: 'smooth' });
                       }, 100);
                     }}
-                    className="rounded-md px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--accent)] transition duration-150 bg-transparent cursor-pointer"
+                    className="rounded-full px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--accent)] transition duration-150 bg-transparent cursor-pointer"
                   >
                     Sponsor Portal
                   </button>
@@ -2428,77 +2668,136 @@ export default function App() {
                 </p>
               </div>
 
+              {isUnlocked && (
+                <div className="flex flex-wrap items-center gap-3 p-3 rounded-2xl border border-[var(--border)] bg-[var(--card-bg)]/80 backdrop-blur-sm shadow-md">
+                  <span className="text-[10px] font-mono tracking-widest text-[var(--accent)] font-extrabold uppercase mr-auto flex items-center gap-1.5 pl-1">
+                    <Sparkles className="h-3.5 w-3.5 text-[var(--accent)] animate-spin-slow" /> Sponsor Slides Management
+                  </span>
+                  <button
+                    onClick={() => {
+                      setAdminModalType('sponsor');
+                      setAdminModalEditId(null);
+                      setAdminModalFields({ name: '', logo: '', tier: 'Gold Partner', desc: '' });
+                    }}
+                    className="px-3.5 py-1.5 rounded-full bg-[var(--accent)] text-black text-[10px] font-black uppercase tracking-wider transition hover:brightness-105 active:scale-95 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add Slide
+                  </button>
+                  {sponsorsState.length > 0 && currentSlide < sponsorsState.length && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setAdminModalType('sponsor');
+                          setAdminModalEditId(currentSlide);
+                          setAdminModalFields({ ...sponsorsState[currentSlide] });
+                        }}
+                        className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-extrabold uppercase transition flex items-center gap-1 cursor-pointer border border-white/10"
+                      >
+                        <Edit className="h-3 w-3" /> Edit Slide ({currentSlide + 1})
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to remove ${sponsorsState[currentSlide].name}?`)) {
+                            const updated = sponsorsState.filter((_: any, idx: number) => idx !== currentSlide);
+                            updateSponsors(updated);
+                            setCurrentSlide(0);
+                          }
+                        }}
+                        className="px-3.5 py-1.5 rounded-full bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-[10px] font-extrabold uppercase transition flex items-center gap-1 cursor-pointer border border-red-500/20"
+                      >
+                        <Trash2 className="h-3 w-3" /> Delete Slide
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Premium Autoplay/Manual Slideshow */}
-              <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 relative overflow-hidden text-left" id="sponsors-slideshow">
-                <div className="absolute top-4 right-4 bg-[var(--bg-primary)]/80 border border-[var(--border)] px-2 py-1 rounded text-[10px] font-mono text-[var(--accent)] uppercase tracking-wider">
-                  Industrial Showcase
+              {sponsorsState.length === 0 ? (
+                <div className="py-12 text-center border border-[var(--border)] rounded-2xl bg-[var(--card-bg)] flex flex-col items-center justify-center gap-2">
+                  <Sparkles className="h-8 w-8 text-[var(--accent)]/40 mb-1" />
+                  <h4 className="text-sm font-black uppercase text-[var(--text-primary)] tracking-wider">No sponsors declared yet</h4>
+                  <p className="text-xs text-[var(--text-secondary)] max-w-xs leading-relaxed">
+                    Corporate affiliate arrays are currently empty. Log in as admin and click "Add Slide" to deploy sponsor layouts.
+                  </p>
                 </div>
-                
-                <div className="flex flex-col md:flex-row items-center gap-8 py-4">
-                  {/* Logo Image */}
-                  <div className="w-full md:w-1/2 aspect-[16/10] bg-[var(--bg-primary)]/45 border border-[var(--border)] rounded-xl overflow-hidden relative group flex items-center justify-center shrink-0">
-                    <ImageWithFallback 
-                      src={sponsorLogos[currentSlide].logo} 
-                      alt={sponsorLogos[currentSlide].name}
-                      className="w-full h-full object-contain p-6 opacity-80 group-hover:opacity-100 transition duration-300"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[var(--bg-primary)] to-transparent p-4 flex flex-col justify-end">
-                      <span id={`sponsor-tier-${currentSlide}`} className="text-[9px] font-mono font-black text-[var(--accent)] tracking-wider uppercase">
-                        {getTextReplacement(`#sponsor-tier-${currentSlide}`, sponsorLogos[currentSlide].tier)}
-                      </span>
-                    </div>
+              ) : (
+                <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 relative overflow-hidden text-left" id="sponsors-slideshow">
+                  <div className="absolute top-4 right-4 bg-[var(--bg-primary)]/80 border border-[var(--border)] px-2 py-1 rounded text-[10px] font-mono text-[var(--accent)] uppercase tracking-wider">
+                    Industrial Showcase
                   </div>
-
-                  {/* Slideshow metadata */}
-                  <div className="w-full md:w-1/2 flex flex-col justify-center text-left">
-                    <span className="text-xs font-mono text-[var(--text-secondary)] uppercase tracking-widest block">Corporate Champion</span>
-                    <h3 id={`sponsor-name-${currentSlide}`} className="text-xl font-black text-[var(--text-primary)] uppercase mt-1">
-                      {getTextReplacement(`#sponsor-name-${currentSlide}`, sponsorLogos[currentSlide].name)}
-                    </h3>
-                    <p id={`sponsor-desc-${currentSlide}`} className="text-xs text-[var(--text-secondary)] mt-3 leading-relaxed min-h-[50px]">
-                      {getTextReplacement(`#sponsor-desc-${currentSlide}`, sponsorLogos[currentSlide].desc)}
-                    </p>
-
-                    {/* Manual trigger controllers */}
-                    <div className="flex items-center gap-4 mt-6">
-                      <div className="flex gap-1.5">
-                        {sponsorLogos.map((_, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setCurrentSlide(idx)}
-                            className={`h-2 rounded-full transition-all ${idx === currentSlide ? 'w-6 bg-[var(--accent)]' : 'w-2 bg-[var(--border)]'}`}
-                            title={`Go to slide ${idx + 1}`}
+                  
+                  {(() => {
+                    const activeSlide = sponsorsState[currentSlide] || sponsorsState[0] || { name: '', logo: '', tier: '', desc: '' };
+                    return (
+                      <div className="flex flex-col md:flex-row items-center gap-8 py-4">
+                        {/* Logo Image */}
+                        <div className="w-full md:w-1/2 aspect-[16/10] bg-[var(--bg-primary)]/45 border border-[var(--border)] rounded-xl overflow-hidden relative group flex items-center justify-center shrink-0">
+                          <ImageWithFallback 
+                            src={activeSlide.logo} 
+                            alt={activeSlide.name}
+                            className="w-full h-full object-contain p-6 opacity-80 group-hover:opacity-100 transition duration-300"
                           />
-                        ))}
-                      </div>
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[var(--bg-primary)] to-transparent p-4 flex flex-col justify-end">
+                            <span id={`sponsor-tier-${currentSlide}`} className="text-[9px] font-mono font-black text-[var(--accent)] tracking-wider uppercase">
+                              {getTextReplacement(`#sponsor-tier-${currentSlide}`, activeSlide.tier)}
+                            </span>
+                          </div>
+                        </div>
 
-                      <div className="flex gap-2 ml-auto">
-                        <button 
-                          onClick={() => setCurrentSlide((prev) => (prev === 0 ? sponsorLogos.length - 1 : prev - 1))}
-                          className="p-1.5 rounded bg-[var(--bg-primary)] hover:bg-[var(--accent)]/15 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition cursor-pointer"
-                          title="Prior slide"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={() => setCurrentSlide((prev) => (prev + 1) % sponsorLogos.length)}
-                          className="p-1.5 rounded bg-[var(--bg-primary)] hover:bg-[var(--accent)]/15 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition cursor-pointer"
-                          title="Next slide"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
+                        {/* Slideshow metadata */}
+                        <div className="w-full md:w-1/2 flex flex-col justify-center text-left">
+                          <span className="text-xs font-mono text-[var(--text-secondary)] uppercase tracking-widest block">Corporate Champion</span>
+                          <h3 id={`sponsor-name-${currentSlide}`} className="text-xl font-black text-[var(--text-primary)] uppercase mt-1">
+                            {getTextReplacement(`#sponsor-name-${currentSlide}`, activeSlide.name)}
+                          </h3>
+                          <p id={`sponsor-desc-${currentSlide}`} className="text-xs text-[var(--text-secondary)] mt-3 leading-relaxed min-h-[50px]">
+                            {getTextReplacement(`#sponsor-desc-${currentSlide}`, activeSlide.desc)}
+                          </p>
+
+                          {/* Manual trigger controllers */}
+                          <div className="flex items-center gap-4 mt-6">
+                            <div className="flex gap-1.5">
+                              {sponsorsState.map((_, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => setCurrentSlide(idx)}
+                                  className={`h-2 rounded-full transition-all ${idx === currentSlide ? 'w-6 bg-[var(--accent)]' : 'w-2 bg-[var(--border)]'}`}
+                                  title={`Go to slide ${idx + 1}`}
+                                />
+                              ))}
+                            </div>
+
+                            <div className="flex gap-2 ml-auto">
+                              <button 
+                                onClick={() => setCurrentSlide((prev) => (prev === 0 ? sponsorsState.length - 1 : prev - 1))}
+                                className="p-1.5 rounded-full bg-[var(--bg-primary)] hover:bg-[var(--accent)]/15 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition cursor-pointer"
+                                title="Prior slide"
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </button>
+                              <button 
+                                onClick={() => setCurrentSlide((prev) => (prev + 1) % sponsorsState.length)}
+                                className="p-1.5 rounded-full bg-[var(--bg-primary)] hover:bg-[var(--accent)]/15 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition cursor-pointer"
+                                title="Next slide"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
-              </div>
+              )}
 
               {/* Typewriter Styled Big Sponsor Interest button */}
               <div className="flex flex-col items-center gap-4 py-6 border-y border-[var(--border)] text-center">
                 <span className="text-xs text-[var(--text-secondary)] font-mono uppercase tracking-wider block">Join Team Vortex as a corporate affiliate</span>
                 <button
                   onClick={() => navigateTo('contact')}
-                  className="w-full max-w-xl group relative overflow-hidden rounded-xl border border-[var(--accent)]/30 bg-[var(--bg-primary)] py-4 md:py-5 px-4 md:px-6 font-mono text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[var(--accent)] shadow-2xl transition duration-300 hover:border-[var(--accent)] hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] active:scale-98 cursor-pointer"
+                  className="w-full max-w-xl group relative overflow-hidden rounded-full border border-[var(--accent)]/30 bg-[var(--bg-primary)] py-4 md:py-5 px-4 md:px-6 font-mono text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[var(--accent)] shadow-2xl transition duration-300 hover:border-[var(--accent)] hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] active:scale-98 cursor-pointer"
                 >
                   <div className="flex items-center justify-center gap-1 min-h-[22px]">
                     <span>{sponsorText}</span>
@@ -2514,7 +2813,7 @@ export default function App() {
         {/* Render TEAM/ROSTER segment with photo located directly underneath description */}
         {activePage === 'team' && (() => {
           // Prepare the filtered members list
-          const filteredMembers = teamMembers.filter(member => {
+          const filteredMembers = roster.filter(member => {
             if (member.department === 'Mentors') return false;
 
             // 1. Department filter
@@ -2583,7 +2882,7 @@ export default function App() {
               {/* Students Section */}
               <div className="flex flex-col gap-8">
                 {/* Header section with department title */}
-                <div className="border-b border-[var(--border)] pb-6 text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="border-b border-[var(--border)] pb-6 text-left flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                   <div>
                     <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">The Crew</span>
                     <h2 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)]" id="team-header-landmark">Meet Team Vortex</h2>
@@ -2592,21 +2891,36 @@ export default function App() {
                     </p>
                   </div>
                   
-                  {/* Department Filter Controls */}
-                  <div className="flex flex-wrap gap-2 shrink-0 py-1" id="team-department-filter-controls">
-                    {(['All', 'Mechanical', 'Software', 'Design & Outreach', 'All-Rounder'] as const).map((dept) => (
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                    {isUnlocked && (
                       <button
-                        key={dept}
-                        onClick={() => setTeamFilter(dept)}
-                        className={`px-3.5 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all duration-200 cursor-pointer border ${
-                          teamFilter === dept
-                            ? 'bg-[var(--accent)] text-[var(--btn-text)] border-[var(--accent)] shadow-md shadow-[var(--accent)]/20'
-                            : 'bg-[var(--card-bg)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)]'
-                        }`}
+                        onClick={() => {
+                          setAdminModalType('roster');
+                          setAdminModalEditId(null);
+                          setAdminModalFields({ name: '', role: '', department: 'Mechanical', bio: '', favTool: '', favComponent: '', quote: '', yearsExperience: 1 });
+                        }}
+                        className="rounded-full bg-[var(--accent)] text-black text-[10px] font-black uppercase tracking-wider px-4 py-2 hover:opacity-90 active:scale-[0.98] transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap self-start lg:self-auto shrink-0"
                       >
-                        {dept}
+                        <Plus className="h-3.5 w-3.5" /> Add Team Member
                       </button>
-                    ))}
+                    )}
+
+                    {/* Department Filter Controls */}
+                    <div className="flex flex-wrap gap-2 py-1" id="team-department-filter-controls">
+                      {(['All', 'Mechanical', 'Software', 'Design & Outreach', 'All-Rounder'] as const).map((dept) => (
+                        <button
+                          key={dept}
+                          onClick={() => setTeamFilter(dept)}
+                          className={`px-3.5 py-2 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all duration-200 cursor-pointer border ${
+                            teamFilter === dept
+                              ? 'bg-[var(--accent)] text-[var(--btn-text)] border-[var(--accent)] shadow-md shadow-[var(--accent)]/20'
+                              : 'bg-[var(--card-bg)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)]'
+                          }`}
+                        >
+                          {dept}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -2641,7 +2955,7 @@ export default function App() {
                     </p>
                     <button 
                       onClick={() => { setTeamSearch(''); setTeamFilter('All'); }}
-                      className="mt-3 px-4 py-2 rounded-xl bg-[var(--accent)] text-black text-[10px] font-black tracking-wider uppercase hover:opacity-85 transition cursor-pointer"
+                      className="mt-3 px-4 py-2 rounded-full bg-[var(--accent)] text-black text-[10px] font-black tracking-wider uppercase hover:opacity-85 transition cursor-pointer"
                     >
                       Reset Filter & Search
                     </button>
@@ -2655,12 +2969,40 @@ export default function App() {
                           key={member.id} 
                           whileHover={{ scale: 1.025, y: -4 }}
                           transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                          className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 flex flex-col gap-5 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left"
+                          className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 flex flex-col gap-5 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left relative"
                           id={`team-member-card-${member.id}`}
                         >
+                          {isUnlocked && (
+                            <div className="absolute top-4 right-4 z-20 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={() => {
+                                  setAdminModalType('roster');
+                                  setAdminModalEditId(member.id);
+                                  setAdminModalFields({ ...member });
+                                }}
+                                className="p-1.5 rounded-full bg-black/70 hover:bg-[var(--accent)] text-[var(--text-primary)] hover:text-black border border-white/10 hover:border-transparent transition-all cursor-pointer shadow-md"
+                                title="Edit Crew Details"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to remove ${member.name} from the roster?`)) {
+                                    const updated = roster.filter((r: any) => r.id !== member.id);
+                                    updateRoster(updated);
+                                  }
+                                }}
+                                className="p-1.5 rounded-full bg-black/70 hover:bg-red-600 text-[var(--text-primary)] hover:text-white border border-white/10 hover:border-transparent transition-all cursor-pointer shadow-md"
+                                title="Remove from Roster"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+
                           <div className="flex flex-col gap-4">
                             {/* Name, Role & Department Tag */}
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-1 pr-14">
                               <div className="flex justify-between items-center">
                                 <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded bg-[var(--accent)]/15 text-[var(--accent)]">
                                   {member.department}
@@ -2699,113 +3041,112 @@ export default function App() {
               </div>
 
               {/* Dedicated Mentors Section */}
-            <div className="flex flex-col gap-8 mt-4">
-              {/* Header section for Mentors */}
-              <div className="border-b border-[var(--border)] pb-6 text-left">
-                <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Guidance</span>
-                <h2 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)]">Mentors & Advisors</h2>
-                <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl">
-                  Industry professional advisors and math/science educators guiding our fabrication techniques and engineering design processes.
-                </p>
-              </div>
+              <div className="flex flex-col gap-8 mt-4">
+                {/* Header section for Mentors */}
+                <div className="border-b border-[var(--border)] pb-6 text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
+                  <div>
+                    <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Guidance</span>
+                    <h2 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)]">Mentors & Advisors</h2>
+                    <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-xl">
+                      Industry professional advisors and math/science educators guiding our fabrication techniques and engineering design processes.
+                    </p>
+                  </div>
+                  {isUnlocked && (
+                    <button
+                      onClick={() => {
+                        setAdminModalType('roster');
+                        setAdminModalEditId(null);
+                        setAdminModalFields({ name: '', role: '', department: 'Mentors', bio: '', yearsExperience: 1 });
+                      }}
+                      className="rounded-full bg-[var(--accent)] text-black text-[10px] font-black uppercase tracking-wider px-4 py-2 hover:opacity-90 active:scale-[0.98] transition flex items-center justify-center gap-1 cursor-pointer shrink-0"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add Mentor
+                    </button>
+                  )}
+                </div>
 
-              {/* Grid of Mentors */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[
-                  {
-                    id: 'm1',
-                    name: 'Coach Elena Rostova',
-                    role: 'Lead Technical Mentor',
-                    department: 'Coaching',
-                    bio: 'With over 10 years of aerospace engineering experience, Elena teaches Vortex structural math, electrical safety, and industrial CAD standards.',
-                    photo: '/assets/images/portraits/person_6.png',
-                    yearsExperience: 8
-                  },
-                  {
-                    id: 'm2',
-                    name: 'Dr. Arthur Pendleton',
-                    role: 'Control Theory Consultant',
-                    department: 'Advisory',
-                    bio: 'Arthur is an associate professor of engineering who guides our developers on advanced sensor fusion matrices and smooth acceleration pathing curves.',
-                    photo: '/assets/images/portraits/person_7.png',
-                    yearsExperience: 5
-                  },
-                  {
-                    id: 'm3',
-                    name: 'Sarah Vance',
-                    role: 'Sponsorship & Outreach Advisor',
-                    department: 'Business Advisory',
-                    bio: 'Sarah coaches the design team on budgeting, industry partner presentations, public speaking, and building a sustainable high school robotics brand.',
-                    photo: '/assets/images/portraits/person_8.png',
-                    yearsExperience: 4
-                  },
-                  {
-                    id: 'm4',
-                    name: 'Marcus Chen',
-                    role: 'Manufacturing & Machining Mentor',
-                    department: 'Fabrication',
-                    bio: 'A veteran machinist and shop owner who teaches safe operation of CNC routers, manual lathe operations, and close-tolerance chassis fabrication.',
-                    photo: '/assets/images/portraits/person_9.png',
-                    yearsExperience: 6
-                  },
-                  {
-                    id: 'm5',
-                    name: 'Dr. Lisa Sterling',
-                    role: 'Software & Logic Advisor',
-                    department: 'Programming',
-                    bio: 'A research systems software architect who guides the programming sub-division in thread-safe multi-threading, custom telemetry loops, and vision processing filters.',
-                    photo: '/assets/images/portraits/person_10.png',
-                    yearsExperience: 7
-                  }
-                ].map((mentor) => (
-                  <motion.div 
-                    key={mentor.id} 
-                    whileHover={{ scale: 1.025, y: -4 }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                    className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 flex flex-col gap-5 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left"
-                    id={`mentor-card-${mentor.id}`}
-                  >
-                    <div className="flex flex-col gap-4">
-                      {/* Name, Role & Department Tag */}
-                      <div className="flex flex-col gap-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded bg-[var(--accent)]/15 text-[var(--accent)]">
-                            {mentor.department}
-                          </span>
-                          <span className="font-mono text-xs text-[var(--text-secondary)]">Advisor</span>
+                {/* Grid of Mentors */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {roster.filter(m => m.department === 'Mentors').map((mentor) => {
+                    const placeholderPhoto = mentor.photo || portraits[mentor.id] || `https://picsum.photos/seed/${mentor.name}/605/455`;
+                    return (
+                      <motion.div 
+                        key={mentor.id} 
+                        whileHover={{ scale: 1.025, y: -4 }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                        className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 flex flex-col gap-5 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left relative"
+                        id={`mentor-card-${mentor.id}`}
+                      >
+                        {isUnlocked && (
+                          <div className="absolute top-4 right-4 z-20 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => {
+                                setAdminModalType('roster');
+                                setAdminModalEditId(mentor.id);
+                                setAdminModalFields({ ...mentor });
+                              }}
+                              className="p-1.5 rounded-full bg-black/70 hover:bg-[var(--accent)] text-[var(--text-primary)] hover:text-black border border-white/10 hover:border-transparent transition-all cursor-pointer shadow-md"
+                              title="Edit Mentor Details"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to remove ${mentor.name}?`)) {
+                                  const updated = roster.filter((r: any) => r.id !== mentor.id);
+                                  updateRoster(updated);
+                                }
+                              }}
+                              className="p-1.5 rounded-full bg-black/70 hover:bg-red-600 text-[var(--text-primary)] hover:text-white border border-white/10 hover:border-transparent transition-all cursor-pointer shadow-md"
+                              title="Remove Mentor"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col gap-4">
+                          {/* Name, Role & Department Tag */}
+                          <div className="flex flex-col gap-1 pr-14">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded bg-[var(--accent)]/15 text-[var(--accent)]">
+                                Advisors
+                              </span>
+                              <span className="font-mono text-xs text-[var(--text-secondary)]">Advisor</span>
+                            </div>
+                            <h4 className="font-sans text-lg font-black tracking-wide text-[var(--text-primary)] uppercase mt-1">
+                              {mentor.name}
+                            </h4>
+                            <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider block">
+                              {mentor.role}
+                            </span>
+                          </div>
+
+                          {/* Description / Bio */}
+                          <p className="text-xs leading-relaxed text-[var(--text-secondary)] min-h-[50px]">
+                            {mentor.bio}
+                          </p>
+
+                          {/* Photo directly underneath their description (exactly matching student card layout!) */}
+                          <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-primary)] group">
+                            <ImageWithFallback 
+                              src={placeholderPhoto} 
+                              alt={`Portrait of ${mentor.name}`}
+                              className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-105"
+                            />
+                          </div>
+
+                          {/* FIRST Experience Animated odometer */}
+                          <FIRSTExperienceYears targetYears={mentor.yearsExperience || 0} />
                         </div>
-                        <h4 className="font-sans text-lg font-black tracking-wide text-[var(--text-primary)] uppercase mt-1">
-                          {mentor.name}
-                        </h4>
-                        <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider block">
-                          {mentor.role}
-                        </span>
-                      </div>
-
-                      {/* Description / Bio */}
-                      <p className="text-xs leading-relaxed text-[var(--text-secondary)] min-h-[50px]">
-                        {mentor.bio}
-                      </p>
-
-                      {/* Photo directly underneath their description (exactly matching student card layout!) */}
-                      <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-primary)] group">
-                        <ImageWithFallback 
-                          src={mentor.photo} 
-                          alt={`Portrait of ${mentor.name}`}
-                          className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-105"
-                        />
-                      </div>
-
-                      {/* FIRST Experience Animated odometer */}
-                      <FIRSTExperienceYears targetYears={mentor.yearsExperience || 0} />
-                    </div>
-                  </motion.div>
-                ))}
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
         {/* Render JOURNEY/TIMELINE + BLOGS segment with vertical chronological timeline */}
         {activePage === 'journey' && (
@@ -2914,278 +3255,285 @@ export default function App() {
               </div>
             </div>
                 {(() => {
-              const pedroPathingItems = [
-                { 
-                  id: 1, 
-                  name: 'Pedro Pathing Setup', 
-                  desc: 'Core library installation script to drive Mecanum drivetrains with sub-millimeter trajectory accuracy.',
-                  details: 'Setup requires importing the `pedropathing` library in Android Studio. The primary class `Follower` controls coordinate kinematics.\n\nInitialize using:\nfollower = new Follower(hardwareMap);\n\nDefine linear coefficients inside your robot configuration files to synchronize odometry track widths.',
-                  icon: Compass,
-                  cta: 'GO TO CODE GITHUB'
-                },
-                { 
-                  id: 7, 
-                  name: 'Braking Distance Optimizer', 
-                  desc: 'Configure motor voltage braking routines to stop precisely in front of high-junction grids.',
-                  details: 'Determines ideal deceleration triggers based on immediate distance remaining, actively stopping the robot weight within 15 milliseconds of reaching target layout.',
-                  icon: Compass,
-                  cta: 'OPTIMIZER TESTER'
-                },
-                { 
-                  id: 8, 
-                  name: 'Error Tolerance Modifier', 
-                  desc: 'Adaptive feedback correction bounds to trigger dynamic replanning during high speed crashes.',
-                  details: 'Triggers dynamic local spline replanning if the translation error gets larger than 2.0 inches, bypassing physical chassis collisions with opponent robots.',
-                  icon: Compass,
-                  cta: 'TRIGGER MODIFIERS'
-                },
-                { 
-                  id: 9, 
-                  name: 'Telemetry Log Dump', 
-                  desc: 'Store local debugging coordinate arrays directly within the REV Control Hub flash modules.',
-                  details: 'Logs timestamps (t), actual coordinates (x, y, Theta), target coordinates, loop-time frequencies (Hz), and battery voltage directly to local CSV arrays for playback.',
-                  icon: Compass,
-                  cta: 'DUMP LOG DATA'
-                },
-                { 
-                  id: 10, 
-                  name: 'Sensor Fusion Matrix', 
-                  desc: 'Incorporate Pinpoint hub encoders together with modern IMU gyroscopes for angle correction.',
-                  details: 'Fuses high-frequency hardware odometry trackers together with the internal Bosch IMU gyroscopes using a complementary velocity filter, completely eliminating rotational drift.',
-                  icon: Compass,
-                  cta: 'FUSION ANALYSIS'
-                }
-              ];
+                  const iconMap: any = { Wrench, Cpu, Box, BookOpen, Compass };
 
-              const sharedAssetsItems = [
-                { 
-                  name: 'Dynamic Team Budget & BOM Planner', 
-                  icon: Wrench, 
-                  desc: 'Interactive parts and ledger manager. Budget structural assemblies, aluminum structures, electronics, and weights in real-time.',
-                  isTool: true,
-                  target: 'bom',
-                  cta: 'LAUNCH PLANNER',
-                  details: 'Vortex direct online Bill of Materials planner utility. Real-time cost, weight calculations, custom suppliers, priority matrices, and threshold indicators.'
-                },
-                { 
-                  name: 'Center of Mass Coordinator Tool', 
-                  icon: Cpu, 
-                  desc: 'Simulate structural load points on an 18" virtual FTC-sizing bounding mesh in 3D. Predict center-of-gravity elevations.',
-                  isTool: true,
-                  target: 'com-calc',
-                  cta: 'LAUNCH CALCULATOR',
-                  details: 'Calculates overall structural centroid gravity values including height boundaries. Identifies active tipping and corner load risk metrics with a vector matrix plot.'
-                },
-                { 
-                  name: 'OnShape CAD Workspace', 
-                  icon: Box, 
-                  desc: 'Complete 3D CAD modeling archive of the Vortex competition robot. Access open-source robot models, drive pods, and assemblies.',
-                  isTool: false,
-                  target: 'https://cad.onshape.com',
-                  cta: 'OPEN WORKSPACE',
-                  details: 'Our OnShape workspace contains the full parametric assemblies for the custom Mecanum chassis frame, cascading elevators, active claws, and electronics bracketry. Useful for inspecting material volumes.'
-                },
-                { 
-                  name: 'Engineering Portfolio Archives', 
-                  icon: BookOpen, 
-                  desc: 'Our interactive global portfolio sharing center. Upload, browse, and filter engineering portfolios by awards won.',
-                  isTool: true,
-                  target: 'portfolios',
-                  cta: 'LAUNCH PORTFOLIO HUB',
-                  details: 'A specialized platform enabling robotics teams globally to submit and curate their engineering notebooks, filter by awards (like Inspire and Think), and browse digital A4 specifications.'
-                }
-              ];
+                  const query = resourceSearch.toLowerCase().trim();
+                  
+                  const filteredPedro = pedroPathing.filter(
+                    (item: any) => item.name.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query)
+                  );
+                  const filteredShared = sharedAssets.filter(
+                    (item: any) => item.name.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query)
+                  );
 
-              const query = resourceSearch.toLowerCase().trim();
-              const filteredPedro = pedroPathingItems.filter(
-                (item) => item.name.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query)
-              );
-              const filteredShared = sharedAssetsItems.filter(
-                (item) => item.name.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query)
-              );
+                  const hasNoResults = filteredPedro.length === 0 && filteredShared.length === 0;
 
-              const hasNoResults = filteredPedro.length === 0 && filteredShared.length === 0;
-
-              if (hasNoResults) {
-                return (
-                  <div className="py-16 text-center border border-[var(--border)] rounded-2xl bg-[var(--card-bg)] flex flex-col items-center justify-center gap-2 animate-fadeIn">
-                    <Compass className="h-8 w-8 text-[var(--text-secondary)] animate-bounce" />
-                    <h4 className="text-sm font-black uppercase text-[var(--text-primary)] tracking-wider">No matching assets found</h4>
-                    <p className="text-xs text-[var(--text-secondary)] max-w-xs leading-relaxed">
-                      We couldn\'t locate any files matching <code className="text-[var(--accent)] font-mono">"{resourceSearch}"</code>. Double-check spelling or try terms like "BOM", "CAD", "Pedro", "PID", or "Slide".
-                    </p>
-                    <button 
-                      onClick={() => setResourceSearch('')}
-                      className="mt-2 text-[10px] font-extrabold uppercase tracking-widest text-[var(--accent)] hover:opacity-85"
-                    >
-                      Reset Query Filter
-                    </button>
-                  </div>
-                );
-              }
-
-              const getSavedLink = (name: string, defaultTarget?: string) => {
-                const identifier = `resource-link-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-                const savedLinks = JSON.parse(localStorage.getItem('vortex_link_replacements') || '{}');
-                return savedLinks[`#${identifier}`] || defaultTarget || '#';
-              };
-
-              return (
-                <>
-                  {filteredShared.length > 0 && (
-                    <div className="flex flex-col gap-6 animate-fadeIn">
-                      <div className="text-left border-l-2 border-[var(--accent)] pl-4">
-                        <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Shared Assets</span>
-                        <h3 className="text-lg font-black text-[var(--text-primary)] uppercase">Our Resources</h3>
+                  if (hasNoResults) {
+                    return (
+                      <div className="py-16 text-center border border-[var(--border)] rounded-2xl bg-[var(--card-bg)] flex flex-col items-center justify-center gap-2 animate-fadeIn">
+                        <Compass className="h-8 w-8 text-[var(--text-secondary)] animate-bounce" />
+                        <h4 className="text-sm font-black uppercase text-[var(--text-primary)] tracking-wider">No matching assets found</h4>
+                        <p className="text-xs text-[var(--text-secondary)] max-w-xs leading-relaxed">
+                          We couldn't locate any files matching <code className="text-[var(--accent)] font-mono">"{resourceSearch}"</code>. Double-check spelling or try terms like "BOM", "CAD", "Pedro", "PID", or "Slide".
+                        </p>
+                        <button 
+                          onClick={() => setResourceSearch('')}
+                          className="mt-2 text-[10px] font-extrabold uppercase tracking-widest text-[var(--accent)] hover:opacity-85"
+                        >
+                          Reset Query Filter
+                        </button>
                       </div>
+                    );
+                  }
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {filteredShared.map((item, index) => {
-                          const IconComp = item.icon;
-                          const isSpecialTool = item.isTool;
-                          const resolvedLink = getSavedLink(item.name, item.target);
-                          return (
-                            <div 
-                              key={index}
-                              onClick={() => {
-                                if (isSpecialTool && item.target) {
-                                  navigateTo(item.target as any);
-                                } else {
-                                  setActiveResourceDetail({
-                                    name: item.name,
-                                    desc: item.desc,
-                                    icon: item.icon,
-                                    details: item.details,
-                                    isTool: item.isTool,
-                                    target: resolvedLink,
-                                    cta: item.cta
-                                  });
-                                }
-                              }}
-                              className={`bg-[var(--card-bg)] border rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 text-left cursor-pointer ${
-                                isSpecialTool 
-                                  ? 'border-[var(--accent)]/40 shadow-[0_0_20px_rgba(0,240,255,0.05)] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(0,240,255,0.12)]'
-                                  : 'border-[var(--border)] hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)]'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className={`h-10 w-10 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
-                                  isSpecialTool 
-                                    ? 'bg-[var(--accent)]/15 border-[var(--accent)]/30 text-[var(--accent)]' 
-                                    : 'bg-[var(--bg-primary)] border-[var(--border)] text-[var(--text-secondary)]'
-                                }`}>
-                                  <IconComp className="h-5 w-5" />
-                                </div>
-                                {isSpecialTool && (
-                                  <span className="text-[8px] font-mono font-bold tracking-widest text-[var(--accent)] bg-[var(--accent)]/12 border border-[var(--accent)]/30 px-2 py-0.5 rounded-md uppercase">
-                                    Interactive
-                                  </span>
-                                )}
-                              </div>
-                              <div>
-                                <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{item.name}</h4>
-                                <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{item.desc}</p>
-                              </div>
-                              <div className="mt-auto pt-2 flex items-center justify-between text-[10px] font-bold">
-                                <div className="flex items-center text-[var(--accent)] hover:underline">
-                                  <span>{item.cta}</span>
-                                  <ExternalLink className="h-3 w-3 ml-1" />
-                                </div>
-                                {isUnlocked && !isSpecialTool && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const identifier = `resource-link-${item.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-                                      setEditingElement({
-                                        selector: `#${identifier}-text`,
-                                        tagName: 'A',
-                                        text: item.cta,
-                                        link: resolvedLink,
-                                        linkSelector: `#${identifier}`
-                                      });
-                                    }}
-                                    className="px-2 py-1 rounded bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30 hover:bg-[var(--accent)] hover:text-black transition-all text-[9.5px] font-bold gap-1 flex items-center cursor-pointer"
-                                  >
-                                    <Edit className="h-2.5 w-2.5" />
-                                    <span>Edit Link</span>
-                                  </button>
-                                )}
-                              </div>
+                  const getSavedLink = (name: string, defaultTarget?: string) => {
+                    const identifier = `resource-link-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+                    const savedLinks = JSON.parse(localStorage.getItem('vortex_link_replacements') || '{}');
+                    return savedLinks[`#${identifier}`] || defaultTarget || '#';
+                  };
+
+                  return (
+                    <>
+                      {filteredShared.length > 0 && (
+                        <div className="flex flex-col gap-6 animate-fadeIn">
+                          <div className="text-left border-l-2 border-[var(--accent)] pl-4 flex items-center justify-between">
+                            <div>
+                              <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Shared Assets</span>
+                              <h3 className="text-lg font-black text-[var(--text-primary)] uppercase">Our Resources</h3>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                            {isUnlocked && (
+                              <button
+                                onClick={() => {
+                                  setAdminModalType('resource');
+                                  setAdminModalEditId(null);
+                                  setAdminModalFields({ name: '', icon: 'Wrench', desc: '', isTool: false, target: '', cta: 'DOWNLOAD ASSET', details: '', category: 'shared' });
+                                }}
+                                className="rounded-full bg-[var(--accent)] text-black text-[10px] font-black uppercase tracking-wider px-3 py-1.5 hover:opacity-90 active:scale-[0.98] transition flex items-center gap-1 cursor-pointer"
+                              >
+                                <Plus className="h-3.5 w-3.5" /> Add Asset
+                              </button>
+                            )}
+                          </div>
 
-                  {filteredPedro.length > 0 && (
-                    <div className="border-t border-[var(--border)] pt-12 flex flex-col gap-6 animate-fadeIn">
-                      <div className="text-left border-l-2 border-[var(--accent)] pl-4">
-                        <span className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase">Trajectory Guides</span>
-                        <h3 className="text-lg font-black text-[var(--text-primary)] uppercase">Pedro Math Controllers</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {filteredPedro.map((dummy) => {
-                          const resolvedLink = getSavedLink(dummy.name, undefined);
-                          return (
-                            <div 
-                              key={dummy.id}
-                              onClick={() => {
-                                setActiveResourceDetail({
-                                  name: dummy.name,
-                                  desc: dummy.desc,
-                                  icon: Compass,
-                                  details: dummy.details,
-                                  isTool: false,
-                                  target: resolvedLink,
-                                  cta: dummy.cta
-                                });
-                              }}
-                              className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left cursor-pointer"
-                            >
-                              <div className="h-10 w-10 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-colors shrink-0">
-                                <Compass className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{dummy.name}</h4>
-                                <p className="text-xs text-[var(--text-secondary)] mt-1 pr-1 leading-relaxed">{dummy.desc}</p>
-                              </div>
-                              <div className="mt-auto pt-2 flex items-center justify-between text-[10px] font-bold">
-                                <div className="flex items-center text-[var(--accent)] hover:underline">
-                                  <span>ACCESS DOCUMENT</span>
-                                  <ExternalLink className="h-3 w-3 ml-1" />
-                                </div>
-                                {isUnlocked && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const identifier = `resource-link-${dummy.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-                                      setEditingElement({
-                                        selector: `#${identifier}-text`,
-                                        tagName: 'A',
-                                        text: dummy.cta,
-                                        link: resolvedLink,
-                                        linkSelector: `#${identifier}`
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {filteredShared.map((item: any, index: number) => {
+                              const IconComp = iconMap[item.icon] || Compass;
+                              const isSpecialTool = item.isTool;
+                              const resolvedLink = getSavedLink(item.name, item.target);
+                              return (
+                                <div 
+                                  key={index}
+                                  onClick={() => {
+                                    if (isSpecialTool && item.target) {
+                                      navigateTo(item.target as any);
+                                    } else {
+                                      setActiveResourceDetail({
+                                        name: item.name,
+                                        desc: item.desc,
+                                        icon: IconComp,
+                                        details: item.details,
+                                        isTool: item.isTool,
+                                        target: resolvedLink,
+                                        cta: item.cta
                                       });
-                                    }}
-                                    className="px-2 py-1 rounded bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30 hover:bg-[var(--accent)] hover:text-black transition-all text-[9.5px] font-bold gap-1 flex items-center cursor-pointer"
-                                  >
-                                    <Edit className="h-2.5 w-2.5" />
-                                    <span>Edit Link</span>
-                                  </button>
-                                )}
-                              </div>
+                                    }
+                                  }}
+                                  className={`bg-[var(--card-bg)] border rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 text-left cursor-pointer relative ${
+                                    isSpecialTool 
+                                      ? 'border-[var(--accent)]/40 shadow-[0_0_20px_rgba(0,240,255,0.05)] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(0,240,255,0.12)]'
+                                      : 'border-[var(--border)] hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)]'
+                                  }`}
+                                >
+                                  {isUnlocked && (
+                                    <div className="absolute top-4 right-4 z-20 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                      <button
+                                        onClick={() => {
+                                          setAdminModalType('resource');
+                                          setAdminModalEditId(index);
+                                          setAdminModalFields({ ...item, category: 'shared' });
+                                        }}
+                                        className="p-1 px-1.5 rounded-md bg-black/75 hover:bg-[var(--accent)] text-white hover:text-black border border-white/10 transition-all cursor-pointer"
+                                        title="Edit Resource"
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (confirm(`Are you sure you want to delete ${item.name}?`)) {
+                                            const updated = sharedAssets.filter((_: any, idx: number) => idx !== index);
+                                            updateSharedAssets(updated);
+                                          }
+                                        }}
+                                        className="p-1 px-1.5 rounded-md bg-black/75 hover:bg-red-600 text-white border border-white/10 transition-all cursor-pointer"
+                                        title="Delete Resource"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  )}
+
+                                  <div className="flex items-center justify-between pr-14">
+                                    <div className={`h-10 w-10 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
+                                      isSpecialTool 
+                                        ? 'bg-[var(--accent)]/15 border-[var(--accent)]/30 text-[var(--accent)]' 
+                                        : 'bg-[var(--bg-primary)] border-[var(--border)] text-[var(--text-secondary)]'
+                                    }`}>
+                                      <IconComp className="h-5 w-5" />
+                                    </div>
+                                    {isSpecialTool && (
+                                      <span className="text-[8px] font-mono font-bold tracking-widest text-[var(--accent)] bg-[var(--accent)]/12 border border-[var(--accent)]/30 px-2 py-0.5 rounded-md uppercase">
+                                        Interactive
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{item.name}</h4>
+                                    <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{item.desc}</p>
+                                  </div>
+                                  <div className="mt-auto pt-2 flex items-center justify-between text-[10px] font-bold">
+                                    <div className="flex items-center text-[var(--accent)] hover:underline">
+                                      <span>{item.cta}</span>
+                                      <ExternalLink className="h-3 w-3 ml-1" />
+                                    </div>
+                                    {isUnlocked && !isSpecialTool && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const identifier = `resource-link-${item.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+                                          setEditingElement({
+                                            selector: `#${identifier}-text`,
+                                            tagName: 'A',
+                                            text: item.cta,
+                                            link: resolvedLink,
+                                            linkSelector: `#${identifier}`
+                                          });
+                                        }}
+                                        className="px-2 py-1 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30 hover:bg-[var(--accent)] hover:text-black transition-all text-[9.5px] font-bold gap-1 flex items-center cursor-pointer"
+                                      >
+                                        <Edit className="h-2.5 w-2.5" />
+                                        <span>Edit Link</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {filteredPedro.length > 0 && (
+                        <div className="border-t border-[var(--border)] pt-12 flex flex-col gap-6 animate-fadeIn">
+                          <div className="text-left border-l-2 border-[var(--accent)] pl-4 flex items-center justify-between">
+                            <div>
+                              <span className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase">Trajectory Guides</span>
+                              <h3 className="text-lg font-black text-[var(--text-primary)] uppercase">Pedro Math Controllers</h3>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+                            {isUnlocked && (
+                              <button
+                                onClick={() => {
+                                  setAdminModalType('resource');
+                                  setAdminModalEditId(null);
+                                  setAdminModalFields({ name: '', icon: 'Compass', desc: '', isTool: false, target: '', cta: 'ACCESS DOCUMENT', details: '', category: 'pedro' });
+                                }}
+                                className="rounded-full bg-[var(--accent)] text-black text-[10px] font-black uppercase tracking-wider px-3 py-1.5 hover:opacity-90 active:scale-[0.98] transition flex items-center gap-1 cursor-pointer"
+                              >
+                                <Plus className="h-3.5 w-3.5" /> Add Setup spec
+                              </button>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {filteredPedro.map((dummy: any, index: number) => {
+                              const resolvedLink = getSavedLink(dummy.name, dummy.target);
+                              const IconComp = iconMap[dummy.icon] || Compass;
+                              return (
+                                <div 
+                                  key={dummy.id || index}
+                                  onClick={() => {
+                                    setActiveResourceDetail({
+                                      name: dummy.name,
+                                      desc: dummy.desc,
+                                      icon: IconComp,
+                                      details: dummy.details,
+                                      isTool: false,
+                                      target: resolvedLink,
+                                      cta: dummy.cta || 'ACCESS DOCUMENT'
+                                    });
+                                  }}
+                                  className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:border-[var(--accent)]/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.08)] text-left cursor-pointer relative"
+                                >
+                                  {isUnlocked && (
+                                    <div className="absolute top-4 right-4 z-20 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                      <button
+                                        onClick={() => {
+                                          setAdminModalType('resource');
+                                          setAdminModalEditId(index);
+                                          setAdminModalFields({ ...dummy, category: 'pedro' });
+                                        }}
+                                        className="p-1 px-1.5 rounded-md bg-black/75 hover:bg-[var(--accent)] text-white hover:text-black border border-white/10 transition-all cursor-pointer"
+                                        title="Edit Spec"
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (confirm(`Are you sure you want to delete ${dummy.name}?`)) {
+                                            const updated = pedroPathing.filter((_: any, idx: number) => idx !== index);
+                                            updatePedroPathing(updated);
+                                          }
+                                        }}
+                                        className="p-1 px-1.5 rounded-md bg-black/75 hover:bg-red-600 text-white border border-white/10 transition-all cursor-pointer"
+                                        title="Delete Spec"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  )}
+
+                                  <div className="h-10 w-10 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-colors shrink-0">
+                                    <IconComp className="h-5 w-5" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-sans text-sm font-black text-[var(--text-primary)] uppercase tracking-wider">{dummy.name}</h4>
+                                    <p className="text-xs text-[var(--text-secondary)] mt-1 pr-1 leading-relaxed">{dummy.desc}</p>
+                                  </div>
+                                  <div className="mt-auto pt-2 flex items-center justify-between text-[10px] font-bold">
+                                    <div className="flex items-center text-[var(--accent)] hover:underline">
+                                      <span>{dummy.cta || 'ACCESS DOCUMENT'}</span>
+                                      <ExternalLink className="h-3 w-3 ml-1" />
+                                    </div>
+                                    {isUnlocked && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const identifier = `resource-link-${dummy.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+                                          setEditingElement({
+                                            selector: `#${identifier}-text`,
+                                            tagName: 'A',
+                                            text: dummy.cta || 'ACCESS DOCUMENT',
+                                            link: resolvedLink,
+                                            linkSelector: `#${identifier}`
+                                          });
+                                        }}
+                                        className="px-2 py-1 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30 hover:bg-[var(--accent)] hover:text-black transition-all text-[9.5px] font-bold gap-1 flex items-center cursor-pointer"
+                                      >
+                                        <Edit className="h-2.5 w-2.5" />
+                                        <span>Edit Link</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
 
             {/* Modal for viewing detailed information about resources */}
             <AnimatePresence>
@@ -3210,7 +3558,7 @@ export default function App() {
                       </div>
                       <button 
                         onClick={() => setActiveResourceDetail(null)}
-                        className="rounded-lg p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--border)]/30 transition cursor-pointer"
+                        className="rounded-full p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--border)]/30 transition cursor-pointer"
                       >
                         <X className="h-5 w-5" />
                       </button>
@@ -3247,7 +3595,7 @@ export default function App() {
                               linkSelector: `#${identifier}`
                             });
                           }}
-                          className="rounded-lg border border-[var(--accent)]/45 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black px-4 py-2 text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          className="rounded-full border border-[var(--accent)]/45 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black px-4 py-2 text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                           <Edit className="h-3.5 w-3.5" />
                           <span>Edit Link</span>
@@ -3255,7 +3603,7 @@ export default function App() {
                       )}
                       <button 
                         onClick={() => setActiveResourceDetail(null)}
-                        className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs font-bold uppercase text-[var(--text-secondary)] hover:bg-[var(--accent)]/5 hover:text-[var(--text-primary)] transition cursor-pointer"
+                        className="rounded-full border border-[var(--border)] px-4 py-2 text-xs font-bold uppercase text-[var(--text-secondary)] hover:bg-[var(--accent)]/5 hover:text-[var(--text-primary)] transition cursor-pointer"
                       >
                         Dismiss
                       </button>
@@ -3265,7 +3613,7 @@ export default function App() {
                             navigateTo(activeResourceDetail.target! as any);
                             setActiveResourceDetail(null);
                           }}
-                          className="rounded-lg bg-[var(--accent)] text-[var(--btn-text)] px-4 py-2 text-xs font-bold uppercase tracking-wider hover:opacity-95 transition cursor-pointer"
+                          className="rounded-full bg-[var(--accent)] text-[var(--btn-text)] px-4 py-2 text-xs font-bold uppercase tracking-wider hover:opacity-95 transition cursor-pointer"
                         >
                           Launch Applet
                         </button>
@@ -3281,7 +3629,7 @@ export default function App() {
                           }}
                           target={activeResourceDetail.target && !activeResourceDetail.target.startsWith('#') ? '_blank' : undefined}
                           rel="noopener noreferrer"
-                          className="rounded-lg bg-[var(--accent)] text-[var(--btn-text)] px-4 py-2 text-xs font-bold uppercase tracking-wider hover:opacity-95 transition flex items-center justify-center gap-1 cursor-pointer"
+                          className="rounded-full bg-[var(--accent)] text-[var(--btn-text)] px-4 py-2 text-xs font-bold uppercase tracking-wider hover:opacity-95 transition flex items-center justify-center gap-1 cursor-pointer"
                         >
                           <span>{activeResourceDetail.cta || 'DOWNLOAD'}</span>
                           <ExternalLink className="h-3 w-3" />
@@ -3307,7 +3655,7 @@ export default function App() {
             <div className="flex items-center gap-2 self-start">
               <button 
                 onClick={() => navigateTo('resources')}
-                className="text-[10px] font-mono font-bold tracking-wider text-[var(--accent)] hover:opacity-80 flex items-center gap-1 cursor-pointer uppercase bg-[var(--accent)]/10 px-2.5 py-1.5 rounded-lg border border-[var(--accent)]/20"
+                className="text-[10px] font-mono font-bold tracking-wider text-[var(--accent)] hover:opacity-80 flex items-center gap-1 cursor-pointer uppercase bg-[var(--accent)]/10 px-2.5 py-1.5 rounded-full border border-[var(--accent)]/20"
               >
                 <ChevronLeft className="h-3.5 w-3.5" /> Back to Resources
               </button>
@@ -3428,7 +3776,7 @@ export default function App() {
                 <button 
                   type="submit" 
                   disabled={contactSubmitting}
-                  className="w-full rounded-md py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full rounded-full py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {contactSubmitting ? (
                     <>
@@ -3595,7 +3943,26 @@ export default function App() {
         )}
 
         {activePage === 'gallery' && (
-          <GalleryPageView />
+          <GalleryPageView 
+            isUnlocked={isUnlocked} 
+            gallery={gallery} 
+            onAdd={() => {
+              setAdminModalType('gallery');
+              setAdminModalEditId(null);
+              setAdminModalFields({ title: '', caption: '', image: '', category: 'MECHANICAL', date: 'July 2026' });
+            }}
+            onEdit={(item) => {
+              setAdminModalType('gallery');
+              setAdminModalEditId(item.id);
+              setAdminModalFields({ ...item });
+            }}
+            onDelete={(id) => {
+              if (confirm('Are you sure you want to remove this image from the gallery?')) {
+                const updated = gallery.filter((item: any) => item.id !== id);
+                updateGallery(updated);
+              }
+            }}
+          />
         )}
 
       </main>
@@ -3761,7 +4128,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
-                className="bg-[var(--accent)] hover:opacity-95 text-black px-2.5 py-1.5 rounded-lg font-mono text-[9px] font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition select-none shadow"
+                className="bg-[var(--accent)] hover:opacity-95 text-black px-2.5 py-1.5 rounded-full font-mono text-[9px] font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition select-none shadow"
               >
                 <LogIn className="h-3 w-3" />
                 <span>Sync with Google</span>
@@ -3844,7 +4211,7 @@ export default function App() {
                   window.location.reload();
                 }
               }}
-              className="bg-stone-800 hover:bg-stone-700 text-stone-300 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-[10px] cursor-pointer transition select-none"
+              className="bg-stone-800 hover:bg-stone-700 text-stone-300 px-3 py-1.5 rounded-full font-bold uppercase tracking-wider text-[10px] cursor-pointer transition select-none"
             >
               Clear Edits
             </button>
@@ -3857,7 +4224,7 @@ export default function App() {
                 setIsUnlocked(false);
                 window.location.reload();
               }}
-              className="bg-red-950/40 border border-red-500/30 text-red-300 hover:bg-red-500/25 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-[10px] cursor-pointer transition select-none"
+              className="bg-red-950/40 border border-red-500/30 text-red-300 hover:bg-red-500/25 px-3 py-1.5 rounded-full font-bold uppercase tracking-wider text-[10px] cursor-pointer transition select-none"
             >
               Lock CMS
             </button>
@@ -3913,7 +4280,7 @@ export default function App() {
                 });
                 setHoveredElement(null);
               }}
-              className="bg-[var(--accent)] text-black font-mono font-black text-[9px] uppercase tracking-widest px-2.5 py-1 rounded shadow-[0_4px_12px_rgba(0,0,0,0.5)] border border-black/30 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1 cursor-pointer select-none"
+              className="bg-[var(--accent)] text-black font-mono font-black text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.5)] border border-black/30 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1 cursor-pointer select-none"
             >
               <Edit className="h-2.5 w-2.5" />
               <span>EDIT</span>
@@ -3936,7 +4303,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setEditingElement(null)}
-                className="text-stone-400 hover:text-white transition rounded-md hover:bg-stone-800 p-1 cursor-pointer"
+                className="text-stone-400 hover:text-white transition rounded-full hover:bg-stone-800 p-1 cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -4218,7 +4585,7 @@ export default function App() {
                   }
                   setEditingElement(null);
                 }}
-                className="bg-[var(--accent)] text-black font-extrabold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg hover:opacity-90 active:scale-[0.98] transition cursor-pointer flex items-center gap-1.5"
+                className="bg-[var(--accent)] text-black font-extrabold text-xs uppercase tracking-wider px-5 py-2.5 rounded-full hover:opacity-90 active:scale-[0.98] transition cursor-pointer flex items-center gap-1.5"
               >
                 <CheckCircle className="h-3.5 w-3.5" />
                 <span>
@@ -4229,6 +4596,391 @@ export default function App() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Structured Master CMS Item Modal */}
+      {adminModalType && (
+        <div id="cms-item-modal" className="fixed inset-0 z-[101] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+          <div className="bg-[#121214] border border-[var(--accent)]/45 rounded-2xl w-full max-w-lg p-6 shadow-[0_20px_50px_rgba(0,0,0,0.95)] text-left flex flex-col gap-4 animate-slideIn max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
+              <div className="flex items-center gap-1.5 font-mono text-[11px] font-black tracking-wider text-[var(--accent)]">
+                <Sparkles className="h-4 w-4 text-[var(--accent)] animate-spin-slow" />
+                <span>
+                  {adminModalEditId !== null ? "MODIFY MASTER ITEM" : "CREATE NEW ITEM"} - {adminModalType.toUpperCase()}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdminModalType(null)}
+                className="text-stone-400 hover:text-white transition rounded-full hover:bg-stone-800 p-1 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Dynamic fields based on adminModalType */}
+            <div className="flex flex-col gap-4">
+              {adminModalType === 'gallery' && (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Image URL / Source</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. /assets/images/gallery/item_1.png or https://example.com/item.jpg"
+                      value={adminModalFields.src || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, src: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Item Title</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. Mechanical chassis manufacturing"
+                      value={adminModalFields.title || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, title: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Category Tag</label>
+                    <select 
+                      className="bg-[#1e1e24] border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      value={adminModalFields.category || 'Competitions'}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, category: e.target.value })}
+                    >
+                      <option value="Competitions">Competitions</option>
+                      <option value="Fabrication">Fabrication</option>
+                      <option value="Outreach">Outreach</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Description</label>
+                    <textarea 
+                      rows={3}
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)] resize-none"
+                      placeholder="Enter a brief, professional description of this gallery item"
+                      value={adminModalFields.description || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, description: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
+
+              {adminModalType === 'sponsor' && (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Sponsor Company Name</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. SolidWorks"
+                      value={adminModalFields.name || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Logo Image URL</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. /assets/images/sponsors/logo.png or https://picsum.photos/300/150"
+                      value={adminModalFields.logo || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, logo: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Sponsorship Tier Tag</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. Gold Partner / Diamond Affiliate"
+                      value={adminModalFields.tier || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, tier: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Sponsor Description</label>
+                    <textarea 
+                      rows={3}
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)] resize-none"
+                      placeholder="Brief tribute explaining how they sponsor Team Vortex"
+                      value={adminModalFields.desc || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, desc: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
+
+              {adminModalType === 'roster' && (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Full Name</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. John Doe"
+                      value={adminModalFields.name || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Role title</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. Drivetrain Lead / Technical Advisor"
+                      value={adminModalFields.role || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, role: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Division/Department</label>
+                    <select 
+                      className="bg-[#1e1e24] border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      value={adminModalFields.department || 'Mechanical'}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, department: e.target.value })}
+                    >
+                      <option value="Mechanical">Mechanical</option>
+                      <option value="Software">Software</option>
+                      <option value="Design & Outreach">Design & Outreach</option>
+                      <option value="All-Rounder">All-Rounder</option>
+                      <option value="Mentors">Advisory / Mentors</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Biographical Summary</label>
+                    <textarea 
+                      rows={3}
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)] resize-none"
+                      placeholder="Enter a brief, engaging biography explaining this crew member's specialty"
+                      value={adminModalFields.bio || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, bio: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Years of FIRST Experience</label>
+                    <input 
+                      type="number" 
+                      min={0}
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      value={adminModalFields.yearsExperience === undefined ? 1 : adminModalFields.yearsExperience}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, yearsExperience: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Portrait Image URL (Optional)</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. /assets/images/portraits/person_6.png"
+                      value={adminModalFields.photo || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, photo: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
+
+              {adminModalType === 'resource' && (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Resource Type/Classification</label>
+                    <select 
+                      className="bg-[#1e1e24] border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      value={adminModalFields.category || 'shared'}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, category: e.target.value })}
+                    >
+                      <option value="shared">Shared Asset / Interactive Tool</option>
+                      <option value="pedro">Pedro Pathing Spec / Trajectory Guide</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Resource Name</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. Center of Mass Calculator"
+                      value={adminModalFields.name || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Lucide Icon name</label>
+                    <select 
+                      className="bg-[#1e1e24] border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      value={adminModalFields.icon || 'Compass'}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, icon: e.target.value })}
+                    >
+                      <option value="Compass">Compass (Navigation)</option>
+                      <option value="Wrench">Wrench (Tools)</option>
+                      <option value="Cpu">Cpu (Program / Logic)</option>
+                      <option value="Box">Box (OnShape CAD / Models)</option>
+                      <option value="BookOpen">BookOpen (Archive / Portfolio)</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Short teaser description</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. Simulation of center of gravity offsets on a virtual chassis mesh in 3D."
+                      value={adminModalFields.desc || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, desc: e.target.value })}
+                    />
+                  </div>
+                  {adminModalFields.category === 'shared' && (
+                    <div className="flex items-center gap-2 py-1">
+                      <input 
+                        type="checkbox" 
+                        id="isToolCheckbox"
+                        className="accent-[var(--accent)] h-4 w-4"
+                        checked={!!adminModalFields.isTool}
+                        onChange={(e) => setAdminModalFields({ ...adminModalFields, isTool: e.target.checked })}
+                      />
+                      <label htmlFor="isToolCheckbox" className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)] select-none cursor-pointer">
+                        Is Special Interactive Tool (loads custom route target)
+                      </label>
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Target link URL or Custom target identifier</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. https://github.org or 'bom' / 'com-calc' (if interactive tool is checked)"
+                      value={adminModalFields.target || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, target: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">CTA Action Text</label>
+                    <input 
+                      type="text" 
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)]"
+                      placeholder="e.g. ACCESS DOCUMENT / LAUNCH PLANNER"
+                      value={adminModalFields.cta || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, cta: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Detailed Documentation explanation (Markdown/Plaintext)</label>
+                    <textarea 
+                      rows={4}
+                      className="bg-black/40 border border-[var(--border)] text-stone-200 p-2.5 rounded-lg text-xs focus:outline-none focus:border-[var(--accent)] resize-none"
+                      placeholder="Detail what this resource offers when clicked..."
+                      value={adminModalFields.details || ''}
+                      onChange={(e) => setAdminModalFields({ ...adminModalFields, details: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
+              <button
+                type="button"
+                onClick={() => setAdminModalType(null)}
+                className="px-4 py-2 rounded-full border border-[var(--border)] text-[var(--text-secondary)] text-xs font-bold hover:bg-stone-800 transition cursor-pointer"
+              >
+                Discard Change
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    if (adminModalType === 'gallery') {
+                      const completeFields = {
+                        id: adminModalEditId !== null ? adminModalEditId : `gal_${Date.now()}`,
+                        src: adminModalFields.src || 'https://picsum.photos/800/600',
+                        title: adminModalFields.title || 'Vortex Gallery Photo',
+                        category: adminModalFields.category || 'Competitions',
+                        description: adminModalFields.description || ''
+                      };
+                      if (adminModalEditId !== null) {
+                        const updated = gallery.map((item: any) => item.id === adminModalEditId ? completeFields : item);
+                        updateGallery(updated);
+                      } else {
+                        updateGallery([...gallery, completeFields]);
+                      }
+                    }
+
+                    else if (adminModalType === 'sponsor') {
+                      const completeFields = {
+                        name: adminModalFields.name || 'Champion Partner',
+                        logo: adminModalFields.logo || 'https://picsum.photos/300/150',
+                        tier: adminModalFields.tier || 'Gold Partner',
+                        desc: adminModalFields.desc || 'Proud sponsor of FTC robotics innovation of Vortex.'
+                      };
+                      if (adminModalEditId !== null) {
+                        const updated = sponsorsState.map((item: any, idx: number) => idx === adminModalEditId ? completeFields : item);
+                        updateSponsors(updated);
+                      } else {
+                        updateSponsors([...sponsorsState, completeFields]);
+                      }
+                    }
+
+                    else if (adminModalType === 'roster') {
+                      const completeFields = {
+                        id: adminModalEditId !== null ? adminModalEditId : `ros_${Date.now()}`,
+                        name: adminModalFields.name || 'Active Member',
+                        role: adminModalFields.role || 'FTC Engineering Specialist',
+                        department: adminModalFields.department || 'Mechanical',
+                        bio: adminModalFields.bio || '',
+                        yearsExperience: adminModalFields.yearsExperience === undefined ? 1 : adminModalFields.yearsExperience,
+                        photo: adminModalFields.photo || ''
+                      };
+                      if (adminModalEditId !== null) {
+                        const updated = roster.map((item: any) => item.id === adminModalEditId ? completeFields : item);
+                        updateRoster(updated);
+                      } else {
+                        updateRoster([...roster, completeFields]);
+                      }
+                    }
+
+                    else if (adminModalType === 'resource') {
+                      const isPedroCategory = adminModalFields.category === 'pedro';
+                      const completeFields = {
+                        id: adminModalEditId !== null ? (isPedroCategory ? (pedroPathing[adminModalEditId]?.id || `ped_${Date.now()}`) : `res_${Date.now()}`) : `res_${Date.now()}`,
+                        name: adminModalFields.name || 'FTC Asset Spec',
+                        icon: adminModalFields.icon || (isPedroCategory ? 'Compass' : 'Wrench'),
+                        desc: adminModalFields.desc || '',
+                        isTool: !isPedroCategory && !!adminModalFields.isTool,
+                        target: adminModalFields.target || '',
+                        cta: adminModalFields.cta || (isPedroCategory ? 'ACCESS DOCUMENT' : 'DOWNLOAD ASSET'),
+                        details: adminModalFields.details || ''
+                      };
+
+                      if (isPedroCategory) {
+                        if (adminModalEditId !== null) {
+                          const updated = pedroPathing.map((item: any, idx: number) => idx === adminModalEditId ? completeFields : item);
+                          updatePedroPathing(updated);
+                        } else {
+                          updatePedroPathing([...pedroPathing, completeFields]);
+                        }
+                      } else {
+                        if (adminModalEditId !== null) {
+                          const updated = sharedAssets.map((item: any, idx: number) => idx === adminModalEditId ? completeFields : item);
+                          updateSharedAssets(updated);
+                        } else {
+                          updateSharedAssets([...sharedAssets, completeFields]);
+                        }
+                      }
+                    }
+
+                    setAdminModalType(null);
+                  } catch (e) {
+                    console.error("Save failed:", e);
+                    alert("A hardware state mismatch occurred, please verify input format.");
+                  }
+                }}
+                className="px-5 py-2.5 rounded-full bg-[var(--accent)] text-black text-xs font-black uppercase tracking-wider hover:brightness-105 active:scale-95 transition cursor-pointer flex items-center justify-center font-mono"
+              >
+                Deploy Configuration
+              </button>
+            </div>
           </div>
         </div>
       )}

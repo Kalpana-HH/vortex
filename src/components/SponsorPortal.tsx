@@ -137,7 +137,7 @@ export default function SponsorPortal() {
           </div>
           <button
             onClick={handleDownloadProspectus}
-            className="shrink-0 flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-slate-850 dark:bg-cyan-600 dark:hover:bg-cyan-500 transition cursor-pointer self-start md:self-auto"
+            className="shrink-0 flex items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-slate-850 dark:bg-cyan-600 dark:hover:bg-cyan-500 transition cursor-pointer self-start md:self-auto"
             id="download-prospectus-btn"
           >
             <Download className="h-3.5 w-3.5" />
@@ -198,7 +198,7 @@ export default function SponsorPortal() {
                   <button
                     key={t.name}
                     onClick={() => setPledge(t.minAmount)}
-                    className={`rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-tight transition ${
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold tracking-tight transition ${
                       currentTier.name === t.name
                         ? `${t.bgSelected} shadow-sm`
                         : 'bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-950/20 dark:text-slate-400'

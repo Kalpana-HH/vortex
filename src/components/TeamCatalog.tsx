@@ -43,7 +43,7 @@ export default function TeamCatalog() {
                     setActiveDept(dept);
                     setSelectedMember(null); // Clear selected item if filters change
                   }}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
                     activeDept === dept
                       ? 'bg-indigo-600 text-white shadow-sm dark:bg-indigo-500'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-850 dark:text-slate-400 dark:hover:bg-slate-800'
