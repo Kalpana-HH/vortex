@@ -7,7 +7,7 @@ import {
 
 export default function PortfolioHub() {
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12 flex flex-col gap-10" id="portfolios-page-view">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 flex flex-col gap-10" id="portfolios-page-view">
       
       {/* Page Header */}
       <div className="text-center pb-6 border-b border-[var(--border)] flex flex-col items-center">

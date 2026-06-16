@@ -191,7 +191,7 @@ export default function COMCalculator() {
   const stability = calculateStability();
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12 flex flex-col gap-10" id="com-page-view animate-fadeIn">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-12 flex flex-col gap-10" id="com-page-view animate-fadeIn">
       
       {/* Page Header */}
       <div className="border-b border-[var(--border)] pb-8 text-left flex flex-col md:flex-row md:items-end justify-between gap-6">

@@ -208,7 +208,7 @@ const GalleryPageView = () => {
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12 flex flex-col gap-12" id="gallery-page-view">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 flex flex-col gap-12" id="gallery-page-view">
       
       {/* Title Header */}
       <div className="border-b border-[var(--border)] pb-6 text-left flex flex-col gap-2">
@@ -2185,14 +2185,14 @@ export default function App() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="border-t border-[var(--border)] bg-[var(--bg-primary)] px-6 py-4 flex flex-col gap-2 md:hidden rounded-b-[24px] transition-all duration-200" id="mobile-menu-drawer">
+          <div className="border-t border-[var(--border)] bg-[var(--bg-primary)] px-4 py-4 flex flex-col gap-2 md:hidden rounded-b-[24px] transition-all duration-200" id="mobile-menu-drawer">
             {/* Home Link */}
             <button
               onClick={() => navigateTo('home')}
-              className={`text-sm font-bold uppercase tracking-wider py-3 text-left transition-all ${
+              className={`text-sm font-bold uppercase tracking-wider py-3 text-left transition-all px-4 ${
                 activePage === 'home'
-                  ? 'text-[var(--accent)] border-l-2 border-[var(--accent)] pl-3'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--accent)] pl-3'
+                  ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--accent)] border-l-2 border-transparent'
               }`}
             >
               Home
@@ -2202,10 +2202,10 @@ export default function App() {
             <div className="flex flex-col">
               <button
                 onClick={() => setMobileAboutOpen(!mobileAboutOpen)}
-                className={`text-sm font-bold uppercase tracking-wider py-3 text-left flex items-center justify-between transition-all ${
+                className={`text-sm font-bold uppercase tracking-wider py-3 text-left flex items-center justify-between transition-all px-4 ${
                   activePage === 'journey' || activePage === 'team'
-                    ? 'text-[var(--accent)] border-l-2 border-[var(--accent)] pl-3'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--accent)] pl-3'
+                    ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--accent)] border-l-2 border-transparent'
                 }`}
               >
                 <span>About</span>
@@ -2218,7 +2218,7 @@ export default function App() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden flex flex-col pl-6 border-l border-[var(--border)] ml-3 gap-1"
+                    className="overflow-hidden flex flex-col pl-4 border-l border-[var(--border)] ml-4 gap-1"
                   >
                     <button
                       onClick={() => navigateTo('journey')}
@@ -2248,10 +2248,10 @@ export default function App() {
                 <button
                   key={p.id}
                   onClick={() => navigateTo(p.id)}
-                  className={`text-sm font-bold uppercase tracking-wider py-3 text-left transition-all ${
+                  className={`text-sm font-bold uppercase tracking-wider py-3 text-left transition-all px-4 ${
                     isSelected
-                      ? 'text-[var(--accent)] border-l-2 border-[var(--accent)] pl-3'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--accent)] pl-3'
+                      ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--accent)] border-l-2 border-transparent'
                   }`}
                 >
                   {p.label}
@@ -2259,18 +2259,20 @@ export default function App() {
               );
             })}
             
-            <button
-              onClick={() => navigateTo('contact')}
-              className="mt-2 w-full text-center rounded-md py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150"
-            >
-              Get In Touch
-            </button>
+            <div className="px-4">
+              <button
+                onClick={() => navigateTo('contact')}
+                className="mt-2 w-full text-center rounded-md py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150"
+              >
+                Get In Touch
+              </button>
+            </div>
           </div>
         )}
       </nav>
 
       {/* Main Pages Switcher */}
-      <main key={activePage} className="flex-grow pt-20 md:pt-24 bg-[var(--bg-primary)] animate-fadeIn">
+      <main key={activePage} className="flex-grow pt-20 md:pt-24 bg-[var(--bg-primary)] animate-fadeIn px-4 md:px-0">
         
         {/* Render HOME segment */}
         {activePage === 'home' && (
@@ -2583,7 +2585,7 @@ export default function App() {
           });
 
           return (
-            <div className="mx-auto max-w-6xl px-6 py-12 flex flex-col gap-10" id="team-page-view">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 flex flex-col gap-10" id="team-page-view">
               
               {/* Students Section */}
               <div className="flex flex-col gap-8">
@@ -2814,7 +2816,7 @@ export default function App() {
 
         {/* Render JOURNEY/TIMELINE + BLOGS segment with vertical chronological timeline */}
         {activePage === 'journey' && (
-          <div className="mx-auto max-w-4xl px-6 py-12 flex flex-col gap-10" id="journey-page-view">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 py-12 flex flex-col gap-10" id="journey-page-view">
             <div className="border-b border-[var(--border)] pb-6 text-left" id="journey-header-landmark">
               <span className="text-[10px] font-bold tracking-widest text-[var(--accent)] uppercase block">Our Timeline</span>
               <h2 className="text-3xl font-extrabold text-[var(--text-primary)] uppercase">Our Journey</h2>
@@ -2883,7 +2885,7 @@ export default function App() {
 
         {/* Render RESOURCES segment */}
         {activePage === 'resources' && (
-          <div className="mx-auto max-w-4xl px-6 py-12 flex flex-col gap-12" id="resources-page-view">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 py-12 flex flex-col gap-12" id="resources-page-view">
             
             {/* Hero Centered Section */}
             <div className="text-center pb-6 border-b border-[var(--border)] flex flex-col items-center">
@@ -3308,7 +3310,7 @@ export default function App() {
 
         {/* Render Path Simulator segment */}
         {activePage === 'pathing' && (
-          <div className="mx-auto max-w-6xl px-6 py-12 flex flex-col gap-8" id="pathing-page-view">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 flex flex-col gap-8" id="pathing-page-view">
             <div className="flex items-center gap-2 self-start">
               <button 
                 onClick={() => navigateTo('resources')}

@@ -203,7 +203,7 @@ export default function BOMManager() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12 flex flex-col gap-10" id="bom-page-view animate-fadeIn">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-12 flex flex-col gap-10" id="bom-page-view animate-fadeIn">
       
       {/* Title block */}
       <div className="border-b border-[var(--border)] pb-8 text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
