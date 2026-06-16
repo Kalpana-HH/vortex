@@ -16,6 +16,15 @@ import firebaseConfig from '../firebase-applet-config.json';
 const vortexLogo = '/assets/images/vortex_logo.png';
 const vortexLongLogo = '/assets/images/Vortex_long.png';
 
+const getInitials = (text: string) => {
+  if (!text) return 'VTX';
+  const clean = text.replace(/(Inc|Corp|Ltd|Team|Robotics|Designer|Lab|Jet Propulsion|Company|Sponsor|Partner|FTC|Texas|Region)/gi, '').trim();
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return 'VTX';
+  if (words.length === 1) return words[0].substring(0, 3).toUpperCase();
+  return (words[0][0] + (words[1] ? words[1][0] : '') + (words[2] ? words[2][0] : '')).toUpperCase();
+};
+
 // Reusable Image component that handles missing imagery by rendering an elegant, styled SVG canvas fallback with technical indicators in the active theme
 const ImageWithFallback = ({ src: propSrc, alt, className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
   const [error, setError] = useState(false);
@@ -65,12 +74,21 @@ const ImageWithFallback = ({ src: propSrc, alt, className, ...props }: React.Img
   }, [activeSrc]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full min-h-[inherit]">
       {showPlaceholder && (
-        <div className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[var(--accent)]/10 to-[var(--accent)]/5 border border-[var(--border)] text-[var(--accent)] select-none p-4 text-center w-full h-full ${className || ''}`}>
-          <Wrench className="w-8 h-8 opacity-40 animate-pulse mb-1.5" />
-          <span className="text-[10px] font-mono tracking-widest text-[var(--text-primary)] uppercase font-semibold">Image Pending</span>
-          <span className="text-[8px] font-mono text-[var(--text-secondary)] uppercase mt-0.5">Placeholder .png</span>
+        <div 
+          className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[var(--accent)]/[0.08] to-[var(--accent)]/[0.02] border border-[var(--border)] text-[var(--accent)] select-none p-4 text-center w-full h-full ${className || ''}`}
+          style={{ filter: 'none', borderStyle: 'solid' }}
+        >
+          <div className="w-11 h-11 rounded-full border border-[var(--border)]/35 bg-[var(--card-bg)] flex items-center justify-center text-xs font-black tracking-widest text-[var(--accent)] shadow-md mb-2 uppercase">
+            {getInitials(alt || '')}
+          </div>
+          <span className="text-[10px] font-mono tracking-widest text-[var(--text-primary)] uppercase font-extrabold block truncate max-w-full px-1">
+            {alt || 'IMAGE PENDING'}
+          </span>
+          <span className="text-[8px] font-mono text-[var(--text-secondary)] uppercase mt-1 block tracking-wider opacity-90">
+            SPECIFY PINPOINT PNG
+          </span>
         </div>
       )}
 
@@ -122,13 +140,13 @@ const FIRSTExperienceYears = ({ targetYears }: { targetYears: number }) => {
   );
 };
 
-// High-fidelity media assets list mapped to local PNG configurations
+// High-fidelity media assets list mapped to local PNG configurations or high-quality CDN stand-ins
 const galleryItems = [
   {
     id: 1,
     title: 'Precision Chassis Milling',
     caption: 'Custom machining of our lightweight aerospace-grade aluminum chassis base-plate on our shop router.',
-    image: '/assets/images/gallery/milling.png',
+    image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
     category: 'MECHANICAL',
     date: 'July 2026'
   },
@@ -136,7 +154,7 @@ const galleryItems = [
     id: 2,
     title: 'Custom PCB Circuit Design',
     caption: 'Prototyping dynamic sensor routing hubs inside Altium to sync absolute encoders and pinpoint system modules.',
-    image: '/assets/images/gallery/pcb.png',
+    image: 'https://images.unsplash.com/photo-1517055720413-6afc8296900d?auto=format&fit=crop&w=800&q=80',
     category: 'ELECTRONICS',
     date: 'June 2026'
   },
@@ -144,7 +162,7 @@ const galleryItems = [
     id: 3,
     title: '3D CAD Mecanum Assembly',
     caption: 'Optimizing high-reduction gearbox placements and motor clearance inside OnShape.',
-    image: '/assets/images/gallery/mecanum_cad.png',
+    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
     category: 'CAD MODELS',
     date: 'June 2026'
   },
@@ -152,7 +170,7 @@ const galleryItems = [
     id: 4,
     title: 'Electrical Harness Inspection',
     caption: 'Testing clean wire loom protections, power distribution modules, and custom copper bus connections.',
-    image: '/assets/images/gallery/wiring.png',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80',
     category: 'ELECTRONICS',
     date: 'August 2026'
   },
@@ -160,7 +178,7 @@ const galleryItems = [
     id: 5,
     title: 'Initial Team Brainstorm Block',
     caption: 'Texas rookie builders studying math bounds, game elements, design spreadsheets, and robot rules.',
-    image: '/assets/images/gallery/team_brainstorm.png',
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
     category: 'WORKSHOPS',
     date: 'June 2026'
   },
@@ -168,7 +186,7 @@ const galleryItems = [
     id: 6,
     title: 'Trajectory Polynomial Plotting',
     caption: 'Drafting bezier mathematical spline curves to calculate path control velocity parameters.',
-    image: '/assets/images/gallery/trajectory.png',
+    image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80',
     category: 'CAD MODELS',
     date: 'August 2026'
   }
@@ -1127,6 +1145,10 @@ export default function App() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
+  // Dropdown menus state declarations
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
+
   // Animated placeholder typewriter states
   const [namePlaceholder, setNamePlaceholder] = useState('');
   const [emailPlaceholder, setEmailPlaceholder] = useState('');
@@ -1142,6 +1164,19 @@ export default function App() {
   const [customAccent, setCustomAccent] = useState('#00f0ff');
   const [customCardBg, setCustomCardBg] = useState('#131338');
   const [customBorder, setCustomBorder] = useState('#2563eb');
+  const [customNavOpacity, setCustomNavOpacity] = useState(0.20);
+
+  // Hex to RGB parser helper
+  const hexToRgb = (hex: string) => {
+    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    const fullHex = hex.replace(shorthandRegex, (_, r, g, b) => r + r + g + g + b + b);
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(fullHex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  };
 
   // Cursor glow style configuration states (Default color is teal)
   const [cursorGlowEnabled, setCursorGlowEnabled] = useState(true);
@@ -1170,10 +1205,17 @@ export default function App() {
       let cardEl: HTMLElement | null = null;
       let target = e.target as HTMLElement | null;
 
-      // Do not apply cursor glow feature on elements inside a nav bar/navigation tabs
-      const isInsideNav = target && (target.closest('nav') || target.closest('[id*="nav"]') || target.closest('[class*="nav"]'));
+      // Do not apply cursor glow feature on elements inside a nav bar, navigation tabs, or footer
+      const isInsideBypassedArea = target && (
+        target.closest('nav') || 
+        target.closest('footer') ||
+        target.closest('[id*="nav"]') || 
+        target.closest('[class*="nav"]') ||
+        target.closest('[id*="footer"]') ||
+        target.closest('[class*="footer"]')
+      );
 
-      if (!isInsideNav) {
+      if (!isInsideBypassedArea) {
         while (target) {
           if (target.classList && (
             target.tagName === 'BUTTON' ||
@@ -1264,7 +1306,12 @@ export default function App() {
   const accentValue = theme === 'light' ? '#2563eb' : customAccent;
   const cardBgValue = theme === 'light' ? '#f8fafc' : customCardBg;
   const borderValue = theme === 'light' ? '#e2e8f0' : customBorder;
-  const navBgValue = theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : (customBg + 'f0');
+  
+  const rgbVal = hexToRgb(customBg);
+  const navBgValue = theme === 'light' 
+    ? `rgba(255, 255, 255, ${customNavOpacity})` 
+    : (rgbVal ? `rgba(${rgbVal.r}, ${rgbVal.g}, ${rgbVal.b}, ${customNavOpacity})` : `rgba(10, 10, 35, ${customNavOpacity})`);
+    
   const footerBgValue = theme === 'light' ? '#f1f5f9' : customBg;
   const btnTextValue = theme === 'light' ? '#ffffff' : '#000035';
 
@@ -1670,59 +1717,157 @@ export default function App() {
             transition: opacity 0.25s ease !important;
           }
         ` : ''}
-      `}</style>
-      
-      {/* High-End Design Navigation Bar */}
-      <nav className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--nav-bg)] backdrop-blur-sm transition-all duration-300 shadow-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          
-          {/* Brand/Logo Layout Matching Image exactly */}
-          <div 
-            onClick={() => navigateTo('home')} 
-            className="flex flex-col items-center justify-center cursor-pointer select-none group py-1"
-            id="brand-logo-trigger"
-          >
-            <img 
-              src={vortexLogo} 
-              alt="Vortex logo badge" 
-              className="h-10 w-10 object-contain transition duration-200 group-hover:scale-105"
-              referrerPolicy="no-referrer"
-            />
-            <span className="font-sans text-[10px] font-black tracking-[0.2em] text-[var(--text-primary)] uppercase mt-1 transition duration-200 group-hover:text-[var(--accent)]">
-              VORTEX
-            </span>
-          </div>
 
-          {/* Desktop Navigation Link Nodes */}
-          <div className="hidden md:flex items-center gap-8">
-            {pages.map((p) => {
-              const isSelected = activePage === p.id;
-              return (
+        /* Custom scrollbar style for theme engine */
+        .theme-scrollover::-webkit-scrollbar {
+          width: 5px;
+        }
+        .theme-scrollover::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .theme-scrollover::-webkit-scrollbar-thumb {
+          background: var(--border);
+          border-radius: 99px;
+        }
+        .theme-scrollover::-webkit-scrollbar-thumb:hover {
+          background: var(--accent);
+        }
+      `}</style>
+          {/* High-End Design Hover Navigation Bar */}
+      <nav className={`fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:w-max max-w-5xl z-40 border border-[var(--border)] bg-[var(--nav-bg)] backdrop-blur-md transition-all duration-300 shadow-lg ${
+        mobileMenuOpen ? 'rounded-[24px]' : 'rounded-full'
+      }`} id="hover-navbar">
+        <div className="mx-auto flex items-center justify-between md:justify-center gap-4 md:gap-5.5 px-6 py-1.5">
+          
+          {/* Left-Aligned Logo & Navigation Links Group */}
+          <div className="flex items-center gap-4 md:gap-5.5">
+            {/* Brand/Logo Layout: Horizontally paired, ultra-slim single line */}
+            <div 
+              onClick={() => navigateTo('home')} 
+              className="flex flex-row items-center gap-2 cursor-pointer select-none group py-1 mr-1"
+              id="brand-logo-trigger"
+            >
+              <img 
+                src={vortexLogo} 
+                alt="Vortex logo badge" 
+                className="h-7 w-7 object-contain transition duration-200 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+              />
+              <span className="font-sans text-sm font-black tracking-[0.2em] text-[var(--text-primary)] uppercase transition duration-200 group-hover:text-[var(--accent)]">
+                VORTEX
+              </span>
+            </div>
+
+            {/* Desktop Navigation Link Nodes */}
+            <div className="hidden md:flex items-center gap-5">
+              {/* Home Link */}
+              <button
+                onClick={() => navigateTo('home')}
+                className={`text-[13px] font-semibold tracking-wider uppercase transition-all duration-150 cursor-pointer relative py-2 ${
+                  activePage === 'home'
+                    ? 'text-[var(--accent)] font-extrabold'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--accent)]'
+                }`}
+                id="nav-link-home"
+              >
+                <span>Home</span>
+                {activePage === 'home' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[var(--accent)] rounded-full" />
+                )}
+              </button>
+
+              {/* About Dropdown node */}
+              <div 
+                className="relative"
+                onMouseEnter={() => setAboutOpen(true)}
+                onMouseLeave={() => setAboutOpen(false)}
+              >
                 <button
-                  key={p.id}
-                  onClick={() => navigateTo(p.id)}
-                  className={`text-[13px] font-semibold tracking-wider uppercase transition-all duration-150 cursor-pointer relative py-2 ${
-                    isSelected
+                  onClick={() => setAboutOpen(!aboutOpen)}
+                  className={`text-[13px] font-semibold tracking-wider uppercase transition-all duration-150 cursor-pointer relative py-2 flex items-center gap-1 ${
+                    activePage === 'journey' || activePage === 'team'
                       ? 'text-[var(--accent)] font-extrabold'
                       : 'text-[var(--text-secondary)] hover:text-[var(--accent)]'
                   }`}
-                  id={`nav-link-${p.id}`}
+                  id="nav-link-about"
                 >
-                  <span>{p.label}</span>
-                  {isSelected && (
+                  <span>About</span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${aboutOpen ? 'rotate-180' : 'rotate-0'}`} />
+                  {(activePage === 'journey' || activePage === 'team') && (
                     <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[var(--accent)] rounded-full" />
                   )}
                 </button>
-              );
-            })}
+                
+                <AnimatePresence>
+                  {aboutOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-1/2 -translate-x-1/2 mt-1 w-44 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] py-1.5 shadow-2xl z-50 overflow-hidden"
+                    >
+                      <button
+                        onClick={() => {
+                          navigateTo('journey');
+                          setAboutOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                          activePage === 'journey'
+                            ? 'text-[var(--accent)] bg-[var(--accent)]/5 font-extrabold'
+                            : 'text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--border)]/30'
+                        }`}
+                      >
+                        Our journey
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigateTo('team');
+                          setAboutOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                          activePage === 'team'
+                            ? 'text-[var(--accent)] bg-[var(--accent)]/5 font-extrabold'
+                            : 'text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--border)]/30'
+                        }`}
+                      >
+                        Roster
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Other Link nodes (Gallery, Resources, Contact) */}
+              {pages.filter(p => !['home', 'team', 'journey'].includes(p.id)).map((p) => {
+                const isSelected = activePage === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => navigateTo(p.id)}
+                    className={`text-[13px] font-semibold tracking-wider uppercase transition-all duration-150 cursor-pointer relative py-2 ${
+                      isSelected
+                        ? 'text-[var(--accent)] font-extrabold'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--accent)]'
+                    }`}
+                    id={`nav-link-${p.id}`}
+                  >
+                    <span>{p.label}</span>
+                    {isSelected && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[var(--accent)] rounded-full" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Solid CTAs and controls */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-2.5">
             
             <button
               onClick={() => navigateTo('contact')}
-              className="hidden sm:inline-block rounded-md px-5 py-2 text-xs font-bold uppercase tracking-wider text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 active:scale-98 transition duration-200 cursor-pointer"
+              className="hidden sm:inline-block rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 active:scale-98 transition duration-200 cursor-pointer"
               id="cta-nav-button"
             >
               Get In Touch
@@ -1731,28 +1876,27 @@ export default function App() {
             {/* Mobile Navigation Drawer Trigger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex h-10 w-10 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--card-bg)] md:hidden cursor-pointer text-[var(--text-secondary)] hover:text-[var(--accent)] transition duration-150"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] md:hidden cursor-pointer text-[var(--text-secondary)] hover:text-[var(--accent)] transition duration-150"
               title="Toggle Navigation Menu"
               id="mobile-navigation-trigger"
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
 
             {/* Custom Theme Popover Control Box in Top-Right Corner */}
             <div className="relative inline-block text-left" id="theme-engine-popover-container">
               <button
                 onClick={() => setCustomizerOpen(!customizerOpen)}
-                className="flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--card-bg)] px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-[var(--accent)] hover:border-[var(--accent)] hover:bg-[var(--accent)]/5 active:scale-98 transition duration-150 cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] text-[var(--accent)] hover:border-[var(--accent)] hover:bg-[var(--accent)]/5 active:scale-98 transition duration-150 cursor-pointer"
                 id="theme-customizer-toggle"
                 title="Style customizer setting controls"
               >
                 <Sparkles className="h-4 w-4 text-[var(--accent)]" />
-                <span>Theme</span>
               </button>
 
               {customizerOpen && (
                 <div 
-                  className="absolute right-0 mt-3 w-80 rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-5 shadow-2xl z-50 text-left"
+                  className="absolute right-0 mt-3 w-80 max-w-[calc(100vw-3rem)] sm:max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-5 shadow-2xl z-50 text-left"
                   id="customizer-picker-dropdown"
                 >
                   <div className="flex items-center justify-between border-b border-[var(--border)] pb-2 mb-3">
@@ -1767,6 +1911,9 @@ export default function App() {
                       <X className="h-4 w-4" />
                     </button>
                   </div>
+
+                  {/* Scrollable Container so all style adjustments are compact and completely visible in viewports */}
+                  <div className="max-h-[350px] overflow-y-auto theme-scrollover pr-1.5 flex flex-col gap-3.5 select-none">
 
                   {/* Mode Selector Option Blocks */}
                   <div className="flex gap-2 p-1 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg mb-3">
@@ -1875,6 +2022,27 @@ export default function App() {
                           onChange={(e) => setCustomBorder(e.target.value)} 
                           className="h-8 w-14 rounded border border-[var(--border)] cursor-pointer bg-transparent"
                           title="Choose borders color"
+                        />
+                      </div>
+
+                      {/* Dynamic Nav Opacity Range Control */}
+                      <div className="flex flex-col gap-1.5 bg-[var(--bg-primary)] p-2.5 rounded-lg border border-[var(--border)]">
+                        <div className="flex items-center justify-between">
+                          <div className="text-left">
+                            <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-primary)] font-extrabold block">Nav opacity</label>
+                            <span className="text-[9px] text-[var(--text-secondary)] block">Set custom transparency</span>
+                          </div>
+                          <span className="text-[10px] font-mono text-[var(--accent)] font-bold">{Math.round(customNavOpacity * 100)}%</span>
+                        </div>
+                        <input 
+                          type="range"
+                          min="0.3"
+                          max="1.0"
+                          step="0.05"
+                          value={customNavOpacity}
+                          onChange={(e) => setCustomNavOpacity(parseFloat(e.target.value))}
+                          className="w-full accent-[var(--accent)] h-1 bg-[var(--border)] rounded-lg appearance-none cursor-pointer"
+                          title="Choose navbar custom opacity level"
                         />
                       </div>
 
@@ -2007,6 +2175,7 @@ export default function App() {
                     )}
                   </div>
 
+                  </div>
                 </div>
               )}
             </div>
@@ -2016,8 +2185,64 @@ export default function App() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="border-t border-[var(--border)] bg-[var(--bg-primary)] px-6 py-4 flex flex-col gap-3 md:hidden transition-all duration-200" id="mobile-menu-drawer">
-            {pages.map((p) => {
+          <div className="border-t border-[var(--border)] bg-[var(--bg-primary)] px-6 py-4 flex flex-col gap-2 md:hidden rounded-b-[24px] transition-all duration-200" id="mobile-menu-drawer">
+            {/* Home Link */}
+            <button
+              onClick={() => navigateTo('home')}
+              className={`text-sm font-bold uppercase tracking-wider py-3 text-left transition-all ${
+                activePage === 'home'
+                  ? 'text-[var(--accent)] border-l-2 border-[var(--accent)] pl-3'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--accent)] pl-3'
+              }`}
+            >
+              Home
+            </button>
+
+            {/* Mobile About Collapsible */}
+            <div className="flex flex-col">
+              <button
+                onClick={() => setMobileAboutOpen(!mobileAboutOpen)}
+                className={`text-sm font-bold uppercase tracking-wider py-3 text-left flex items-center justify-between transition-all ${
+                  activePage === 'journey' || activePage === 'team'
+                    ? 'text-[var(--accent)] border-l-2 border-[var(--accent)] pl-3'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--accent)] pl-3'
+                }`}
+              >
+                <span>About</span>
+                <ChevronDown className={`h-4 w-4 mr-2 transition-transform duration-200 ${mobileAboutOpen ? 'rotate-180' : 'rotate-0'}`} />
+              </button>
+              
+              <AnimatePresence>
+                {mobileAboutOpen && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden flex flex-col pl-6 border-l border-[var(--border)] ml-3 gap-1"
+                  >
+                    <button
+                      onClick={() => navigateTo('journey')}
+                      className={`text-[13px] font-bold uppercase tracking-wider py-2.5 text-left transition-all ${
+                        activePage === 'journey' ? 'text-[var(--accent)] font-extrabold' : 'text-[var(--text-secondary)]'
+                      }`}
+                    >
+                      Our journey
+                    </button>
+                    <button
+                      onClick={() => navigateTo('team')}
+                      className={`text-[13px] font-bold uppercase tracking-wider py-2.5 text-left transition-all ${
+                        activePage === 'team' ? 'text-[var(--accent)] font-extrabold' : 'text-[var(--text-secondary)]'
+                      }`}
+                    >
+                      Roster
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Other Link nodes (Gallery, Resources, Contact) */}
+            {pages.filter(p => !['home', 'team', 'journey'].includes(p.id)).map((p) => {
               const isSelected = activePage === p.id;
               return (
                 <button
@@ -2033,6 +2258,7 @@ export default function App() {
                 </button>
               );
             })}
+            
             <button
               onClick={() => navigateTo('contact')}
               className="mt-2 w-full text-center rounded-md py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150"
@@ -2044,52 +2270,50 @@ export default function App() {
       </nav>
 
       {/* Main Pages Switcher */}
-      <main key={activePage} className="flex-grow bg-[var(--bg-primary)] animate-fadeIn">
+      <main key={activePage} className="flex-grow pt-20 md:pt-24 bg-[var(--bg-primary)] animate-fadeIn">
         
         {/* Render HOME segment */}
         {activePage === 'home' && (
-          <div className="mx-auto max-w-6xl px-6 py-12 flex flex-col gap-16" id="home-page-view">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 md:py-12 flex flex-col gap-10 md:gap-16" id="home-page-view">
             
              {/* Central High-Fidelity Branding Banner Matching Image Style Exactly */}
-            <div className="relative text-center py-16 px-8 flex flex-col items-center justify-center transition duration-300 min-h-[calc(100vh-140px)] pb-32 overflow-hidden rounded-2xl">
+            <div className="relative text-center py-10 md:py-16 px-4 md:px-8 flex flex-col items-center justify-center transition duration-300 min-h-[calc(100vh-140px)] pb-24 md:pb-32 overflow-hidden rounded-2xl">
               
               {/* Scrolling Background Photo Collage */}
-              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none opacity-[0.24] dark:opacity-[0.14] transition-opacity duration-300">
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none opacity-[0.55] dark:opacity-[0.45] transition-opacity duration-300">
                 {/* Dynamic radial & linear mask over the background for flawless contrast */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,var(--bg-primary)_80%)] z-10" />
                 <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-primary)]/80 via-transparent to-[var(--bg-primary)]/90 z-10" />
                 
                 {/* Dual Row Interlocking Rotating Stream Grid */}
-                <div className="flex flex-col gap-6 transform -rotate-3 md:-rotate-6 scale-110 h-full justify-center opacity-85">
+                <div className="flex flex-col gap-8 transform -rotate-3 md:-rotate-6 scale-110 h-full justify-center opacity-85">
                   {/* Row 1: Leftward moving track */}
-                  <div className="flex whitespace-nowrap gap-4 w-[300%] animate-collage-left">
+                  <div className="flex whitespace-nowrap gap-5 w-[300%] animate-collage-left">
                     {collageRow1.map((item, index) => (
                       <div 
                         key={`col1-${item.id}-${index}`} 
-                        className="w-48 h-32 md:w-64 md:h-40 rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--card-bg)] shadow-md flex-shrink-0"
+                        className="w-64 h-44 md:w-80 md:h-56 rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--card-bg)] shadow-md flex-shrink-0 pointer-events-none"
                       >
-                        <img 
+                        <ImageWithFallback 
                           src={item.image} 
                           alt={item.title} 
-                          className="w-full h-full object-cover filter grayscale contrast-115 brightness-[0.85] dark:brightness-75"
-                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover filter contrast-115 brightness-[0.9] dark:brightness-80"
                         />
                       </div>
                     ))}
                   </div>
 
                   {/* Row 2: Rightward moving track */}
-                  <div className="flex whitespace-nowrap gap-4 w-[300%] animate-collage-right">
+                  <div className="flex whitespace-nowrap gap-5 w-[300%] animate-collage-right">
                     {collageRow2.map((item, index) => (
                       <div 
                         key={`col2-${item.id}-${index}`} 
-                        className="w-48 h-32 md:w-64 md:h-40 rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--card-bg)] shadow-md flex-shrink-0"
+                        className="w-64 h-44 md:w-80 md:h-56 rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--card-bg)] shadow-md flex-shrink-0 pointer-events-none"
                       >
-                        <img 
+                        <ImageWithFallback 
                           src={item.image} 
                           alt={item.title} 
-                          className="w-full h-full object-cover filter grayscale contrast-115 brightness-[0.85] dark:brightness-75"
-                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover filter contrast-115 brightness-[0.9] dark:brightness-80"
                         />
                       </div>
                     ))}
@@ -2110,7 +2334,7 @@ export default function App() {
                       referrerPolicy="no-referrer"
                     />
                   </div>
-                  <h1 className="font-sans text-4xl md:text-5xl font-black tracking-[0.25em] text-[var(--text-primary)] uppercase mt-2 leading-none">
+                  <h1 className="font-sans text-3xl sm:text-4xl md:text-5xl font-black tracking-[0.25em] text-[var(--text-primary)] uppercase mt-2 leading-none">
                     VORTEX
                   </h1>
                 </div>
@@ -2158,12 +2382,12 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-8 overflow-hidden relative shadow-sm hover:border-[var(--accent)]/35 transition-all duration-300" id="machine-spec-showcase">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/[0.03] rounded-full blur-3xl pointer-events-none" />
               
-              {/* Image side - Hiding the CAD image to extend the whitespace so it's not visible, per user request */}
+              {/* Image side - Showing the CAD image per user request */}
               <div className="md:col-span-5 relative aspect-[16/11] rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-primary)] group">
                 <ImageWithFallback 
-                  src="/assets/images/robot_img.png" 
-                  alt="Vortex Competition Robot Hero design representation" 
-                  className="hidden w-full h-full object-contain p-4 transition duration-300 group-hover:scale-105"
+                  src="/assets/images/vortex_robot_hero_1780695937145.png" 
+                  alt="CAD-Version Drivetrain 2026-27" 
+                  className="w-full h-full object-contain p-4 transition duration-300 group-hover:scale-105"
                 />
               </div>
 
@@ -2279,7 +2503,7 @@ export default function App() {
                 <span className="text-xs text-[var(--text-secondary)] font-mono uppercase tracking-wider block">Join Team Vortex as a corporate affiliate</span>
                 <button
                   onClick={() => navigateTo('contact')}
-                  className="w-full max-w-xl group relative overflow-hidden rounded-xl border border-[var(--accent)]/30 bg-[var(--bg-primary)] py-5 px-6 font-mono text-xs font-bold uppercase tracking-widest text-[var(--accent)] shadow-2xl transition duration-300 hover:border-[var(--accent)] hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] active:scale-98 cursor-pointer"
+                  className="w-full max-w-xl group relative overflow-hidden rounded-xl border border-[var(--accent)]/30 bg-[var(--bg-primary)] py-4 md:py-5 px-4 md:px-6 font-mono text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[var(--accent)] shadow-2xl transition duration-300 hover:border-[var(--accent)] hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] active:scale-98 cursor-pointer"
                 >
                   <div className="flex items-center justify-center gap-1 min-h-[22px]">
                     <span>{sponsorText}</span>
@@ -3120,8 +3344,8 @@ export default function App() {
 
         {/* Render CONTACT segment */}
         {activePage === 'contact' && (
-          <div className="mx-auto max-w-3xl px-6 py-24 min-h-[400px]" id="contact-page-view">
-            <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-8 max-w-xl mx-auto shadow-xl text-left">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6 py-10 md:py-24 min-h-[400px]" id="contact-page-view">
+            <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-5 sm:p-8 max-w-xl mx-auto shadow-xl text-left">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase block">Inquire</span>
                 {isDraftAutosaved && (

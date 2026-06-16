@@ -212,44 +212,44 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+          <div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-5">
             {/* Days Card */}
-            <div className="flex flex-col items-center rounded-2xl bg-[var(--bg-primary)]/45 p-4 sm:p-5 text-center border border-[var(--border)] select-none hover:border-[var(--accent)]/30 hover:shadow-[0_0_15px_rgba(0,240,255,0.05)] transition-all duration-300">
-              <span className="font-mono text-3xl md:text-4xl font-extrabold text-[var(--text-primary)]">
+            <div className="flex flex-col items-center rounded-2xl bg-[var(--bg-primary)]/45 p-2 sm:p-5 text-center border border-[var(--border)] select-none hover:border-[var(--accent)]/30 hover:shadow-[0_0_15px_rgba(0,240,255,0.05)] transition-all duration-300">
+              <span className="font-mono text-xl sm:text-3xl md:text-4xl font-extrabold text-[var(--text-primary)]">
                 {padZero(timeLeft.days)}
               </span>
-              <span className="mt-1 text-[9px] font-mono font-black tracking-wider uppercase text-[var(--text-secondary)]">
+              <span className="mt-1 text-[8px] sm:text-[9px] font-mono font-black tracking-wider uppercase text-[var(--text-secondary)]">
                 Days
               </span>
             </div>
 
             {/* Hours Card */}
-            <div className="flex flex-col items-center rounded-2xl bg-[var(--bg-primary)]/45 p-4 sm:p-5 text-center border border-[var(--border)] select-none hover:border-[var(--accent)]/30 hover:shadow-[0_0_15px_rgba(0,240,255,0.05)] transition-all duration-300">
-              <span className="font-mono text-3xl md:text-4xl font-extrabold text-[var(--text-primary)]">
+            <div className="flex flex-col items-center rounded-2xl bg-[var(--bg-primary)]/45 p-2 sm:p-5 text-center border border-[var(--border)] select-none hover:border-[var(--accent)]/30 hover:shadow-[0_0_15px_rgba(0,240,255,0.05)] transition-all duration-300">
+              <span className="font-mono text-xl sm:text-3xl md:text-4xl font-extrabold text-[var(--text-primary)]">
                 {padZero(timeLeft.hours)}
               </span>
-              <span className="mt-1 text-[9px] font-mono font-black tracking-wider uppercase text-[var(--text-secondary)]">
+              <span className="mt-1 text-[8px] sm:text-[9px] font-mono font-black tracking-wider uppercase text-[var(--text-secondary)]">
                 Hours
               </span>
             </div>
 
             {/* Minutes Card */}
-            <div className="flex flex-col items-center rounded-2xl bg-[var(--bg-primary)]/45 p-4 sm:p-5 text-center border border-[var(--border)] select-none hover:border-[var(--accent)]/30 hover:shadow-[0_0_15px_rgba(0,240,255,0.05)] transition-all duration-300">
-              <span className="font-mono text-3xl md:text-4xl font-extrabold text-[var(--text-primary)]">
+            <div className="flex flex-col items-center rounded-2xl bg-[var(--bg-primary)]/45 p-2 sm:p-5 text-center border border-[var(--border)] select-none hover:border-[var(--accent)]/30 hover:shadow-[0_0_15px_rgba(0,240,255,0.05)] transition-all duration-300">
+              <span className="font-mono text-xl sm:text-3xl md:text-4xl font-extrabold text-[var(--text-primary)]">
                 {padZero(timeLeft.minutes)}
               </span>
-              <span className="mt-1 text-[9px] font-mono font-black tracking-wider uppercase text-[var(--text-secondary)]">
+              <span className="mt-1 text-[8px] sm:text-[9px] font-mono font-black tracking-wider uppercase text-[var(--text-secondary)]">
                 Minutes
               </span>
             </div>
 
             {/* Seconds Card */}
-            <div className="flex flex-col items-center rounded-2xl bg-[var(--bg-primary)]/50 p-4 sm:p-5 text-center border border-[var(--accent)]/30 select-none hover:shadow-[0_0_15px_rgba(0,240,255,0.1)] transition-all duration-300 relative overflow-hidden">
+            <div className="flex flex-col items-center rounded-2xl bg-[var(--bg-primary)]/50 p-2 sm:p-5 text-center border border-[var(--accent)]/30 select-none hover:shadow-[0_0_15px_rgba(0,240,255,0.1)] transition-all duration-300 relative overflow-hidden">
               <div className="absolute top-0 inset-x-0 h-0.5 bg-[var(--accent)]/60 animate-pulse"></div>
-              <span className="font-mono text-3xl md:text-4xl font-extrabold text-[var(--accent)]">
+              <span className="font-mono text-xl sm:text-3xl md:text-4xl font-extrabold text-[var(--accent)]">
                 {padZero(timeLeft.seconds)}
               </span>
-              <span className="mt-1 text-[9px] font-mono font-black tracking-wider uppercase text-[var(--accent)]">
+              <span className="mt-1 text-[8px] sm:text-[9px] font-mono font-black tracking-wider uppercase text-[var(--accent)]">
                 Seconds
               </span>
             </div>
