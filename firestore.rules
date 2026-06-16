@@ -11,15 +11,12 @@ service cloud.firestore {
       allow read: if true; // Publicly accessible so changes are universal across devices
       
       allow create, update: if request.auth != null && 
-                     request.auth.token.email_verified == true && 
                      (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
                       request.auth.token.email == "hraha0311@gmail.com") &&
-                     request.resource.data.updatedAt == request.time &&
                      request.resource.data.selector is string &&
                      request.resource.data.text is string;
                      
       allow delete: if request.auth != null && 
-                     request.auth.token.email_verified == true && 
                      (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
                       request.auth.token.email == "hraha0311@gmail.com");
     }
@@ -29,15 +26,12 @@ service cloud.firestore {
       allow read: if true; // Publicly accessible so images are synchronized universially
       
       allow create, update: if request.auth != null && 
-                     request.auth.token.email_verified == true && 
                      (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
                       request.auth.token.email == "hraha0311@gmail.com") &&
-                     request.resource.data.updatedAt == request.time &&
                      request.resource.data.selector is string &&
                      request.resource.data.src is string;
                      
       allow delete: if request.auth != null && 
-                     request.auth.token.email_verified == true && 
                      (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
                       request.auth.token.email == "hraha0311@gmail.com");
     }
@@ -47,15 +41,36 @@ service cloud.firestore {
       allow read: if true; // Publicly accessible so hyperlinks are synchronized universally
       
       allow create, update: if request.auth != null && 
-                     request.auth.token.email_verified == true && 
                      (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
                       request.auth.token.email == "hraha0311@gmail.com") &&
-                     request.resource.data.updatedAt == request.time &&
                      request.resource.data.selector is string &&
                      request.resource.data.href is string;
                      
       allow delete: if request.auth != null && 
-                     request.auth.token.email_verified == true && 
+                     (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
+                      request.auth.token.email == "hraha0311@gmail.com");
+    }
+
+    // Universal Countdown Configuration collection
+    match /countdown_config/{configId} {
+      allow read: if true; // Publicly accessible so changes are universal across devices
+      
+      allow create, update: if request.auth != null && 
+                     (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
+                      request.auth.token.email == "hraha0311@gmail.com") &&
+                     request.resource.data.eventTitle is string &&
+                     request.resource.data.targetDateStr is string;
+                     
+      allow delete: if request.auth != null && 
+                     (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
+                      request.auth.token.email == "hraha0311@gmail.com");
+    }
+
+    // Universal Custom Lists collection (for gallery, sponsors, roster, etc.)
+    match /custom_data/{documentId} {
+      allow read: if true; // Publicly accessible so changes are universal across devices
+      
+      allow write: if request.auth != null && 
                      (request.auth.token.email == "anumulakalpana4u@gmail.com" || 
                       request.auth.token.email == "hraha0311@gmail.com");
     }

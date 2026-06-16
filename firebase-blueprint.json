@@ -62,6 +62,27 @@
         }
       },
       "required": ["selector", "href", "updatedAt"]
+    },
+    "countdownEvent": {
+      "title": "Countdown Event",
+      "description": "Global configurable event details and countdown timer target date",
+      "type": "object",
+      "properties": {
+        "eventTitle": {
+          "type": "string",
+          "description": "The title of the targeted event"
+        },
+        "targetDateStr": {
+          "type": "string",
+          "description": "ISO-8601 target event timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the update"
+        }
+      },
+      "required": ["eventTitle", "targetDateStr", "updatedAt"]
     }
   },
   "firestore": {
@@ -76,6 +97,10 @@
     "link_replacements/{replacementId}": {
       "schema": "linkReplacement",
       "description": "Universal hyperlink targets for site-wide editable paths"
+    },
+    "countdown_config/{configId}": {
+      "schema": "countdownEvent",
+      "description": "Global targeted countdown event configuration"
     }
   }
 }

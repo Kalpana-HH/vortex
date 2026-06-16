@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Edit, Check, Award, Lock, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../App';
 
 interface TimeLeft {
   days: number;
@@ -11,9 +13,11 @@ interface TimeLeft {
 
 interface CountdownTimerProps {
   isUnlocked?: boolean;
+  db?: any;
+  currentUser?: any;
 }
 
-export default function CountdownTimer({ isUnlocked = false }: CountdownTimerProps) {
+export default function CountdownTimer({ isUnlocked = false, db, currentUser }: CountdownTimerProps) {
   // Configurable event details with persistence
   const [eventTitle, setEventTitle] = useState(() => {
     return localStorage.getItem('vortex_countdown_event_title') || 'FTC State Qualifier';
@@ -32,10 +36,37 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
 
   // Initialize input dates from saved state
   useEffect(() => {
-    const [date, time] = targetDateStr.split('T');
-    setInputDate(date || '2026-12-12');
-    setInputTime(time ? time.substring(0, 5) : '09:00');
+    if (!targetDateStr) return;
+    const parts = targetDateStr.includes('T') ? targetDateStr.split('T') : [targetDateStr, '09:00:00'];
+    setInputDate(parts[0] || '2026-12-12');
+    setInputTime(parts[1] ? parts[1].substring(0, 5) : '09:00');
   }, [targetDateStr]);
+
+  // Real-time synchronization of the target count down timer from Firestore
+  useEffect(() => {
+    if (!db) return;
+
+    const pathStr = 'countdown_config/main';
+    const unsubscribe = onSnapshot(doc(db, "countdown_config", "main"), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data.eventTitle && data.targetDateStr) {
+          setEventTitle(data.eventTitle);
+          setTargetDateStr(data.targetDateStr);
+          localStorage.setItem('vortex_countdown_event_title', data.eventTitle);
+          localStorage.setItem('vortex_countdown_target_date', data.targetDateStr);
+        }
+      }
+    }, (error) => {
+      try {
+        handleFirestoreError(error, OperationType.GET, pathStr);
+      } catch (err) {
+        console.warn("Firestore count down config read error (expected if permissions apply):", err);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [db]);
 
   // Main countdown calculation loop
   useEffect(() => {
@@ -62,19 +93,41 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
     return () => clearInterval(timer);
   }, [targetDateStr]);
 
-  const handleSaveDate = (e: React.FormEvent) => {
+  const handleSaveDate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (inputDate && inputTitle.trim()) {
       const newTargetStr = `${inputDate}T${inputTime || '00:00'}:00`;
+      
+      // Optimistically update states locally first
       setTargetDateStr(newTargetStr);
       setEventTitle(inputTitle.trim());
       localStorage.setItem('vortex_countdown_target_date', newTargetStr);
       localStorage.setItem('vortex_countdown_event_title', inputTitle.trim());
       setIsEditing(false);
+
+      if (db) {
+        const pathStr = 'countdown_config/main';
+        try {
+          const userEmailLower = currentUser?.email?.toLowerCase();
+          const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+          if (isAdminEmail) {
+            await setDoc(doc(db, "countdown_config", "main"), {
+              eventTitle: inputTitle.trim(),
+              targetDateStr: newTargetStr,
+              updatedAt: serverTimestamp()
+            });
+          }
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, pathStr);
+        }
+      }
     }
   };
 
   const padZero = (num: number) => String(num).padStart(2, '0');
+
+  const userEmailLower = currentUser?.email?.toLowerCase();
+  const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
 
   return (
     <div 
@@ -84,7 +137,7 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
       {/* Background radial soft light gradient */}
       <div className="absolute -right-20 -top-20 -z-10 h-64 w-64 rounded-full bg-[var(--accent)]/10 blur-[80px]"></div>
       <div className="absolute -left-20 -bottom-20 -z-10 h-64 w-64 rounded-full bg-[var(--accent)]/5 blur-[80px]"></div>
-
+ 
       <div className="flex flex-col gap-6">
         {/* Countdown Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
@@ -100,7 +153,7 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
               </h3>
             </div>
           </div>
-
+ 
           {/* Access-conditional Editing Mechanism */}
           <div className="flex items-center gap-2">
             {isUnlocked && (
@@ -108,9 +161,9 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
                 onClick={() => {
                   if (!isEditing) {
                     setInputTitle(eventTitle);
-                    const [date, time] = targetDateStr.split('T');
-                    setInputDate(date);
-                    setInputTime(time.substring(0, 5));
+                    const parts = targetDateStr.includes('T') ? targetDateStr.split('T') : [targetDateStr, '09:00:00'];
+                    setInputDate(parts[0] || '2026-12-12');
+                    setInputTime(parts[1] ? parts[1].substring(0, 5) : '09:00');
                   }
                   setIsEditing(!isEditing);
                 }}
@@ -133,7 +186,7 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
             )}
           </div>
         </div>
-
+ 
         {/* Date Selector form */}
         <AnimatePresence>
           {isEditing && isUnlocked && (
@@ -180,6 +233,21 @@ export default function CountdownTimer({ isUnlocked = false }: CountdownTimerPro
                 </div>
               </div>
               
+              {/* Cloud Synchronization Status Indicator */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)]/40 text-[10px] font-mono leading-relaxed mt-1">
+                {isAdminEmail ? (
+                  <span className="text-emerald-400 flex items-center gap-1.5 font-bold">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Global Sync Connected (Admin: {currentUser.email})
+                  </span>
+                ) : (
+                  <span className="text-amber-400 flex flex-wrap items-center gap-1 font-bold">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    Local Only. Please tap 'Sync with Google' at bottom & sign-in as Admin to broadcast globally. Only authorized admins can change countdowns.
+                  </span>
+                )}
+              </div>
+
               <div className="flex justify-end gap-2 mt-2">
                 <button
                   type="button"

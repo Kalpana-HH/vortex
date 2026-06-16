@@ -416,13 +416,13 @@ const decryptVal = (codes: number[], key = 42) => {
 
 // Initialize Firebase Application, Firestore Database, and Authentication services
 const app = initializeApp(firebaseConfig);
-const db = initializeFirestore(app, {
+export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
   ...((firebaseConfig as any).firestoreDatabaseId ? { databaseId: (firebaseConfig as any).firestoreDatabaseId } : {})
 });
-const auth = getAuth(app);
+export const auth = getAuth(app);
 
-enum OperationType {
+export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
   DELETE = 'delete',
@@ -448,7 +448,7 @@ interface FirestoreErrorInfo {
   }
 }
 
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -782,29 +782,99 @@ export default function App() {
   const [adminModalEditId, setAdminModalEditId] = useState<any>(null);
   const [adminModalFields, setAdminModalFields] = useState<any>({});
 
-  const updateGallery = (newGallery: any) => {
+  const updateGallery = async (newGallery: any) => {
     setGallery(newGallery);
     localStorage.setItem('vortex_custom_gallery', JSON.stringify(newGallery));
+    if (db) {
+      const userEmailLower = currentUser?.email?.toLowerCase();
+      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+      if (isAdminEmail) {
+        try {
+          await setDoc(doc(db, "custom_data", "gallery"), {
+            items: newGallery,
+            updatedAt: serverTimestamp()
+          });
+        } catch (e) {
+          console.error("Failed to sync gallery to Firestore:", e);
+        }
+      }
+    }
   };
 
-  const updateSponsors = (newSponsors: any) => {
+  const updateSponsors = async (newSponsors: any) => {
     setSponsorsState(newSponsors);
     localStorage.setItem('vortex_custom_sponsors', JSON.stringify(newSponsors));
+    if (db) {
+      const userEmailLower = currentUser?.email?.toLowerCase();
+      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+      if (isAdminEmail) {
+        try {
+          await setDoc(doc(db, "custom_data", "sponsors"), {
+            items: newSponsors,
+            updatedAt: serverTimestamp()
+          });
+        } catch (e) {
+          console.error("Failed to sync sponsors to Firestore:", e);
+        }
+      }
+    }
   };
 
-  const updateRoster = (newRoster: any) => {
+  const updateRoster = async (newRoster: any) => {
     setRoster(newRoster);
     localStorage.setItem('vortex_custom_roster', JSON.stringify(newRoster));
+    if (db) {
+      const userEmailLower = currentUser?.email?.toLowerCase();
+      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+      if (isAdminEmail) {
+        try {
+          await setDoc(doc(db, "custom_data", "roster"), {
+            items: newRoster,
+            updatedAt: serverTimestamp()
+          });
+        } catch (e) {
+          console.error("Failed to sync roster to Firestore:", e);
+        }
+      }
+    }
   };
 
-  const updatePedroPathing = (newItems: any) => {
+  const updatePedroPathing = async (newItems: any) => {
     setPedroPathing(newItems);
     localStorage.setItem('vortex_custom_pedro_pathing', JSON.stringify(newItems));
+    if (db) {
+      const userEmailLower = currentUser?.email?.toLowerCase();
+      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+      if (isAdminEmail) {
+        try {
+          await setDoc(doc(db, "custom_data", "pedro_pathing"), {
+            items: newItems,
+            updatedAt: serverTimestamp()
+          });
+        } catch (e) {
+          console.error("Failed to sync pedro_pathing to Firestore:", e);
+        }
+      }
+    }
   };
 
-  const updateSharedAssets = (newItems: any) => {
+  const updateSharedAssets = async (newItems: any) => {
     setSharedAssets(newItems);
     localStorage.setItem('vortex_custom_shared_assets', JSON.stringify(newItems));
+    if (db) {
+      const userEmailLower = currentUser?.email?.toLowerCase();
+      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
+      if (isAdminEmail) {
+        try {
+          await setDoc(doc(db, "custom_data", "shared_assets"), {
+            items: newItems,
+            updatedAt: serverTimestamp()
+          });
+        } catch (e) {
+          console.error("Failed to sync shared_assets to Firestore:", e);
+        }
+      }
+    }
   };
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -928,10 +998,80 @@ export default function App() {
       console.warn("Firestore link subscription inactive (expected in offline/pre-deployment scenarios):", error);
     });
 
+    // Real-time synchronization of gallery items
+    const unsubscribeGallery = onSnapshot(doc(db, "custom_data", "gallery"), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && Array.isArray(data.items)) {
+          setGallery(data.items);
+          localStorage.setItem('vortex_custom_gallery', JSON.stringify(data.items));
+        }
+      }
+    }, (error) => {
+      console.warn("Firestore gallery subscription inactive:", error);
+    });
+
+    // Real-time synchronization of sponsors
+    const unsubscribeSponsors = onSnapshot(doc(db, "custom_data", "sponsors"), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && Array.isArray(data.items)) {
+          setSponsorsState(data.items);
+          localStorage.setItem('vortex_custom_sponsors', JSON.stringify(data.items));
+        }
+      }
+    }, (error) => {
+      console.warn("Firestore sponsors subscription inactive:", error);
+    });
+
+    // Real-time synchronization of team roster
+    const unsubscribeRoster = onSnapshot(doc(db, "custom_data", "roster"), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && Array.isArray(data.items)) {
+          setRoster(data.items);
+          localStorage.setItem('vortex_custom_roster', JSON.stringify(data.items));
+        }
+      }
+    }, (error) => {
+      console.warn("Firestore roster subscription inactive:", error);
+    });
+
+    // Real-time synchronization of robot specs/pedro pathing
+    const unsubscribePedroPathing = onSnapshot(doc(db, "custom_data", "pedro_pathing"), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && Array.isArray(data.items)) {
+          setPedroPathing(data.items);
+          localStorage.setItem('vortex_custom_pedro_pathing', JSON.stringify(data.items));
+        }
+      }
+    }, (error) => {
+      console.warn("Firestore pedro_pathing subscription inactive:", error);
+    });
+
+    // Real-time synchronization of shared assets/resources
+    const unsubscribeSharedAssets = onSnapshot(doc(db, "custom_data", "shared_assets"), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && Array.isArray(data.items)) {
+          setSharedAssets(data.items);
+          localStorage.setItem('vortex_custom_shared_assets', JSON.stringify(data.items));
+        }
+      }
+    }, (error) => {
+      console.warn("Firestore shared_assets subscription inactive:", error);
+    });
+
     return () => {
       unsubscribeText();
       unsubscribeImages();
       unsubscribeLinks();
+      unsubscribeGallery();
+      unsubscribeSponsors();
+      unsubscribeRoster();
+      unsubscribePedroPathing();
+      unsubscribeSharedAssets();
     };
   }, []);
 
@@ -1294,7 +1434,8 @@ export default function App() {
                   imgEl.src = base64;
                   
                   // Sync with Firestore if admin
-                  const isAdminEmail = currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com");
+                  const userEmailLower = currentUser?.email?.toLowerCase();
+                  const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
                   if (isAdminEmail) {
                     const docId = btoa(selector).replace(/\//g, '_').replace(/=/g, '');
                     await setDoc(doc(db, "image_replacements", docId), {
@@ -2656,7 +2797,7 @@ export default function App() {
             </div>
 
             {/* High-Contrast Live Event Countdown System */}
-            <CountdownTimer isUnlocked={isUnlocked} />
+            <CountdownTimer isUnlocked={isUnlocked} db={db} currentUser={currentUser} />
 
             {/* Render SPONSORS segment with animated automatic image slideshow and interactive typing button */}
             <div className="flex flex-col gap-12 mt-4 pt-12 border-t border-[var(--border)]" id="sponsors-home-section">
@@ -4136,11 +4277,11 @@ export default function App() {
             ) : (
               <div className="flex items-center gap-2">
                 <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded ${
-                  currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com"
+                  currentUser.email && (currentUser.email.toLowerCase() === "anumulakalpana4u@gmail.com" || currentUser.email.toLowerCase() === "hraha0311@gmail.com")
                     ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
                     : "bg-amber-500/15 text-amber-400 border border-amber-500/25"
                 }`}>
-                  {currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com"
+                  {currentUser.email && (currentUser.email.toLowerCase() === "anumulakalpana4u@gmail.com" || currentUser.email.toLowerCase() === "hraha0311@gmail.com")
                     ? "Universal Synced"
                     : "No Write Perms"}
                 </span>
@@ -4189,7 +4330,8 @@ export default function App() {
                   localStorage.removeItem('vortex_custom_contact_info_message');
                   
                   // Empty firestore collections if admin
-                  const isAdminEmail = currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com");
+                  const userEmailLower = currentUser?.email?.toLowerCase();
+                  const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
                   if (isAdminEmail) {
                     try {
                       // Text edits
@@ -4470,7 +4612,7 @@ export default function App() {
               <div className="pt-1.5 border-t border-stone-900 flex flex-col gap-1.5 text-[10px] font-mono">
                 <div className="flex items-center justify-between">
                   <span className="text-stone-500 uppercase tracking-wider text-[9px]">Universal Sync Status:</span>
-                  {currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com") ? (
+                  {currentUser && currentUser.email && (currentUser.email.toLowerCase() === "anumulakalpana4u@gmail.com" || currentUser.email.toLowerCase() === "hraha0311@gmail.com") ? (
                     <span className="text-emerald-400 flex items-center gap-1 uppercase font-bold">
                       <CheckCircle2 className="h-3 w-3" /> Enabled
                     </span>
@@ -4523,7 +4665,8 @@ export default function App() {
                       }));
 
                       // Sync with Firestore if admin
-                      const isAdminEmail = currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com");
+                      const userEmailLower = currentUser?.email?.toLowerCase();
+                      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
                       if (isAdminEmail) {
                         const docId = btoa(editingElement.selector).replace(/\//g, '_').replace(/=/g, '');
                         await setDoc(doc(db, "text_replacements", docId), {
@@ -4542,7 +4685,8 @@ export default function App() {
                       localStorage.setItem('vortex_link_replacements', JSON.stringify(parsedLinks));
 
                       // Sync with Firestore if admin
-                      const isAdminEmail = currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com");
+                      const userEmailLower = currentUser?.email?.toLowerCase();
+                      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
                       if (isAdminEmail) {
                         const docId = btoa(editingElement.linkSelector).replace(/\//g, '_').replace(/=/g, '');
                         await setDoc(doc(db, "link_replacements", docId), {
@@ -4567,7 +4711,8 @@ export default function App() {
                       }
 
                       // Sync with Firestore if admin
-                      const isAdminEmail = currentUser && (currentUser.email === "anumulakalpana4u@gmail.com" || currentUser.email === "hraha0311@gmail.com");
+                      const userEmailLower = currentUser?.email?.toLowerCase();
+                      const isAdminEmail = currentUser && userEmailLower && (userEmailLower === "anumulakalpana4u@gmail.com" || userEmailLower === "hraha0311@gmail.com");
                       if (isAdminEmail) {
                         const docId = btoa(editingElement.selector).replace(/\//g, '_').replace(/=/g, '');
                         await setDoc(doc(db, "image_replacements", docId), {
