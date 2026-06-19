@@ -4,6 +4,7 @@ import {
   Sparkles, Sliders, Info, Compass, HelpCircle, Activity,
   Maximize2, Cpu, Wrench, Layers
 } from 'lucide-react';
+import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface RobotComponent {
   id: string;

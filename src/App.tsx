@@ -7,6 +7,7 @@ import COMCalculator from './components/COMCalculator';
 import PortfolioHub from './components/PortfolioHub';
 import CountdownTimer from './components/CountdownTimer';
 import PathSimulator from './components/PathSimulator';
+import AwardsDisplay from './components/AwardsDisplay';
 
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
@@ -109,7 +110,7 @@ const ImageWithFallback = ({ src: propSrc, alt, className, ...props }: React.Img
   );
 };
 
-type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery' | 'bom' | 'com-calc' | 'portfolios' | 'pathing';
+type PageID = 'home' | 'team' | 'journey' | 'sponsors' | 'resources' | 'contact' | 'gallery' | 'bom' | 'com-calc' | 'portfolios' | 'pathing' | 'awards';
 
 interface PageItem {
   id: PageID;
@@ -1914,6 +1915,7 @@ export default function App() {
     { id: 'home', label: 'Home' },
     { id: 'team', label: 'Roster' },
     { id: 'journey', label: 'Our journey' },
+    { id: 'awards', label: 'Achievements' },
     { id: 'gallery', label: 'Gallery' },
     { id: 'resources', label: 'Resources' },
     { id: 'contact', label: 'Contact' }
@@ -2123,9 +2125,13 @@ export default function App() {
         }
       `}</style>
           {/* High-End Design Hover Navigation Bar */}
-      <nav className={`fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:w-max max-w-5xl z-40 border border-[var(--border)] bg-[var(--nav-bg)] backdrop-blur-md transition-all duration-300 shadow-lg ${
-        mobileMenuOpen ? 'rounded-[24px]' : 'rounded-full'
-      }`} id="hover-navbar">
+      <nav 
+        className={`fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:w-max max-w-5xl z-40 border border-[var(--border)] bg-[var(--nav-bg)] backdrop-blur-md shadow-lg ${
+          mobileMenuOpen ? 'rounded-[24px]' : 'rounded-full'
+        }`}
+        style={{ transition: 'border-radius 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease' }}
+        id="hover-navbar"
+      >
         <div className="mx-auto flex items-center justify-between md:justify-center gap-4 md:gap-5.5 px-6 py-1.5">
           
           {/* Left-Aligned Logo & Navigation Links Group */}
@@ -2174,7 +2180,7 @@ export default function App() {
                 <button
                   onClick={() => setAboutOpen(!aboutOpen)}
                   className={`text-[13px] font-semibold tracking-wider uppercase transition-all duration-150 cursor-pointer relative py-2 flex items-center gap-1 ${
-                    activePage === 'journey' || activePage === 'team'
+                    activePage === 'journey' || activePage === 'team' || activePage === 'awards'
                       ? 'text-[var(--accent)] font-extrabold'
                       : 'text-[var(--text-secondary)] hover:text-[var(--accent)]'
                   }`}
@@ -2182,7 +2188,7 @@ export default function App() {
                 >
                   <span>About</span>
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${aboutOpen ? 'rotate-180' : 'rotate-0'}`} />
-                  {(activePage === 'journey' || activePage === 'team') && (
+                  {(activePage === 'journey' || activePage === 'team' || activePage === 'awards') && (
                     <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[var(--accent)] rounded-full" />
                   )}
                 </button>
@@ -2222,13 +2228,26 @@ export default function App() {
                       >
                         Roster
                       </button>
+                      <button
+                        onClick={() => {
+                          navigateTo('awards');
+                          setAboutOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                          activePage === 'awards'
+                            ? 'text-[var(--accent)] bg-[var(--accent)]/5 font-extrabold'
+                            : 'text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--border)]/30'
+                        }`}
+                      >
+                        Awards
+                      </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
               {/* Other Link nodes (Gallery, Resources, Contact) */}
-              {pages.filter(p => !['home', 'team', 'journey'].includes(p.id)).map((p) => {
+              {pages.filter(p => !['home', 'team', 'journey', 'awards'].includes(p.id)).map((p) => {
                 const isSelected = activePage === p.id;
                 return (
                   <button
@@ -2572,92 +2591,109 @@ export default function App() {
 
         </div>
 
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="border-t border-[var(--border)] bg-[var(--bg-primary)] px-4 py-4 flex flex-col gap-2 md:hidden rounded-b-[24px] transition-all duration-200" id="mobile-menu-drawer">
-            {/* Home Link */}
-            <button
-              onClick={() => navigateTo('home')}
-              className={`text-sm font-bold uppercase tracking-wider py-3 text-left transition-all px-4 ${
-                activePage === 'home'
-                  ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--accent)] border-l-2 border-transparent'
-              }`}
+        {/* Mobile Navigation Drawer with smooth height & opacity toggle animation */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="border-t border-[var(--border)] bg-[var(--bg-primary)] px-4 py-4 flex flex-col gap-2 md:hidden rounded-b-[24px] overflow-hidden" 
+              id="mobile-menu-drawer"
             >
-              Home
-            </button>
-
-            {/* Mobile About Collapsible */}
-            <div className="flex flex-col">
+              {/* Home Link */}
               <button
-                onClick={() => setMobileAboutOpen(!mobileAboutOpen)}
-                className={`text-sm font-bold uppercase tracking-wider py-3 text-left flex items-center justify-between transition-all px-4 ${
-                  activePage === 'journey' || activePage === 'team'
+                onClick={() => navigateTo('home')}
+                className={`text-sm font-bold uppercase tracking-wider py-3 text-left transition-all px-4 ${
+                  activePage === 'home'
                     ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]'
                     : 'text-[var(--text-secondary)] hover:text-[var(--accent)] border-l-2 border-transparent'
                 }`}
               >
-                <span>About</span>
-                <ChevronDown className={`h-4 w-4 mr-2 transition-transform duration-200 ${mobileAboutOpen ? 'rotate-180' : 'rotate-0'}`} />
+                Home
               </button>
-              
-              <AnimatePresence>
-                {mobileAboutOpen && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden flex flex-col pl-4 border-l border-[var(--border)] ml-4 gap-1"
-                  >
-                    <button
-                      onClick={() => navigateTo('journey')}
-                      className={`text-[13px] font-bold uppercase tracking-wider py-2.5 text-left transition-all ${
-                        activePage === 'journey' ? 'text-[var(--accent)] font-extrabold' : 'text-[var(--text-secondary)]'
-                      }`}
-                    >
-                      Our journey
-                    </button>
-                    <button
-                      onClick={() => navigateTo('team')}
-                      className={`text-[13px] font-bold uppercase tracking-wider py-2.5 text-left transition-all ${
-                        activePage === 'team' ? 'text-[var(--accent)] font-extrabold' : 'text-[var(--text-secondary)]'
-                      }`}
-                    >
-                      Roster
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
-            {/* Other Link nodes (Gallery, Resources, Contact) */}
-            {pages.filter(p => !['home', 'team', 'journey'].includes(p.id)).map((p) => {
-              const isSelected = activePage === p.id;
-              return (
+              {/* Mobile About Collapsible */}
+              <div className="flex flex-col">
                 <button
-                  key={p.id}
-                  onClick={() => navigateTo(p.id)}
-                  className={`text-sm font-bold uppercase tracking-wider py-3 text-left transition-all px-4 ${
-                    isSelected
+                  onClick={() => setMobileAboutOpen(!mobileAboutOpen)}
+                  className={`text-sm font-bold uppercase tracking-wider py-3 text-left flex items-center justify-between transition-all px-4 ${
+                    activePage === 'journey' || activePage === 'team' || activePage === 'awards'
                       ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]'
                       : 'text-[var(--text-secondary)] hover:text-[var(--accent)] border-l-2 border-transparent'
                   }`}
                 >
-                  {p.label}
+                  <span>About</span>
+                  <ChevronDown className={`h-4 w-4 mr-2 transition-transform duration-200 ${mobileAboutOpen ? 'rotate-180' : 'rotate-0'}`} />
                 </button>
-              );
-            })}
-            
-            <div className="px-4">
-              <button
-                onClick={() => navigateTo('contact')}
-                className="mt-2 w-full text-center rounded-full py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150"
-              >
-                Get In Touch
-              </button>
-            </div>
-          </div>
-        )}
+                
+                <AnimatePresence>
+                  {mobileAboutOpen && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden flex flex-col pl-4 border-l border-[var(--border)] ml-4 gap-1"
+                    >
+                      <button
+                        onClick={() => navigateTo('journey')}
+                        className={`text-[13px] font-bold uppercase tracking-wider py-2.5 text-left transition-all ${
+                          activePage === 'journey' ? 'text-[var(--accent)] font-extrabold' : 'text-[var(--text-secondary)]'
+                        }`}
+                      >
+                        Our journey
+                      </button>
+                      <button
+                        onClick={() => navigateTo('team')}
+                        className={`text-[13px] font-bold uppercase tracking-wider py-2.5 text-left transition-all ${
+                          activePage === 'team' ? 'text-[var(--accent)] font-extrabold' : 'text-[var(--text-secondary)]'
+                        }`}
+                      >
+                        Roster
+                      </button>
+                      <button
+                        onClick={() => navigateTo('awards')}
+                        className={`text-[13px] font-bold uppercase tracking-wider py-2.5 text-left transition-all ${
+                          activePage === 'awards' ? 'text-[var(--accent)] font-extrabold' : 'text-[var(--text-secondary)]'
+                        }`}
+                      >
+                        Achievements
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Other Link nodes (Gallery, Resources, Contact) */}
+              {pages.filter(p => !['home', 'team', 'journey', 'awards'].includes(p.id)).map((p) => {
+                const isSelected = activePage === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => navigateTo(p.id)}
+                    className={`text-sm font-bold uppercase tracking-wider py-3 text-left transition-all px-4 ${
+                      isSelected
+                        ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--accent)] border-l-2 border-transparent'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+              
+              <div className="px-4">
+                <button
+                  onClick={() => navigateTo('contact')}
+                  className="mt-2 w-full text-center rounded-full py-3 text-xs font-bold uppercase tracking-widest text-[var(--btn-text)] bg-[var(--accent)] hover:opacity-90 transition duration-150"
+                >
+                  Get In Touch
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Main Pages Switcher */}
@@ -3371,6 +3407,11 @@ export default function App() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Render AWARDS & ACHIEVEMENTS segment */}
+        {activePage === 'awards' && (
+          <AwardsDisplay db={db} currentUser={currentUser} isUnlocked={isUnlocked} />
         )}
 
         {/* Render RESOURCES segment */}
