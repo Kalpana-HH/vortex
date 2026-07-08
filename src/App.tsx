@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw, CheckCircle, Lock, Unlock, LogIn, LogOut, CheckCircle2, Search, Edit, Plus, Trash2 } from 'lucide-react';
+import { Menu, X, Github, Compass, Terminal, Eye, BookOpen, MessageSquare, Youtube, Instagram, Box, ExternalLink, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, Award, Calendar, MapPin, Users, Handshake, Sparkles, Cpu, Wrench, Image, Clock, FileText, School, Shield, RefreshCw, CheckCircle, Lock, Unlock, LogIn, LogOut, CheckCircle2, Search, Edit, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { teamMembers } from './data/team';
 import BOMManager from './components/BOMManager';
@@ -4688,9 +4688,21 @@ export default function App() {
                   </span>
                 )}
                 {firebaseSyncError && (
-                  <span className="text-[9px] text-amber-400/90 font-sans leading-normal">
-                    ℹ️ Firestore fallback is active. To enable multi-device sync, ensure your custom Firebase project has Google Login enabled and Firestore collection "text_replacements" rules are deployed.
-                  </span>
+                  <div className="text-[10px] text-amber-400 bg-amber-950/20 border border-amber-500/15 p-2.5 rounded-lg font-sans leading-normal mt-1.5 flex flex-col gap-1.5">
+                    <div className="font-semibold flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3 shrink-0" />
+                      <span>Firestore Sync Active Error:</span>
+                    </div>
+                    <div className="font-mono text-[9px] text-stone-300 break-words bg-black/40 p-2 rounded border border-stone-800">
+                      {firebaseSyncError}
+                    </div>
+                    <div className="text-stone-400 leading-normal mt-0.5 space-y-1">
+                      <p className="font-semibold text-stone-300">💡 Common Solutions for your Custom Project:</p>
+                      <span className="block pl-1.5">• Ensure a <strong>Firestore Database</strong> has been created in your Firebase Console (click "Create Database" under Firestore Database, choosing Production or Test mode).</span>
+                      <span className="block pl-1.5">• Click <strong>"Sync with Google"</strong> in the bottom toolbar and authenticate with your admin account (<code>anumulakalpana4u@gmail.com</code>). Writes are locked to authorized admins.</span>
+                      <span className="block pl-1.5">• Add the current domain <code>{window.location.hostname}</code> to your Firebase Console under <strong>Authentication &gt; Settings &gt; Authorized domains</strong> so Google Login can authenticate successfully.</span>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
